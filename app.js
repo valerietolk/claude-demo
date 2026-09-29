@@ -185,7 +185,7 @@
     centerTop = steps[current].offsetTop - base;
     const pitch = steps[1].offsetTop - steps[0].offsetTop;
     const row = dotY(steps[current]) - steps[current].offsetTop;
-    track.style.setProperty('--mc', `${centerTop + row}px`);
+    track.style.setProperty('--mc', `${list.offsetTop + centerTop + row}px`);
     track.style.setProperty('--P', `${pitch}px`);
     drawRail();
     if (!browsing) applyOffset(base);
@@ -223,34 +223,23 @@
   });
   roadmap.addEventListener('mouseenter', () => clearTimeout(backT));
 
-  // ---------- Фон: неспешный дрейф и отклик на курсор ----------
-  // Сумма синусоид с несоизмеримыми периодами (от 1,5 до 4 минут) не повторяется,
-  // поэтому цикла не видно. Курсор слегка тянет круги за собой, каждый со своей глубиной.
-  const shapes = [...document.querySelectorAll('.blob__shape')];
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
-  const depth = [1, -0.7, 0.55, 0];
-  const seed = shapes.map((_, i) => [0.021 + i * 0.0043, 0.033 - i * 0.0031, 0.017 + i * 0.0057, 1.3 * i, 2.1 * i]);
+  // ---------- Фон: круги мягко тянутся за курсором ----------
+  // Сами круги живут на CSS-анимации (морфинг + дрейф), курсор лишь смещает их,
+  // у каждого своя глубина, синий уходит в обратную сторону — лёгкий параллакс.
+  const blobs = [...document.querySelectorAll('.blob')];
+  const depth = [5, -4, 3.5, 0];
+  let mraf = 0;
   window.addEventListener('pointermove', e => {
-    mouse.x = e.clientX / innerWidth * 2 - 1;
-    mouse.y = e.clientY / innerHeight * 2 - 1;
-  }, { passive: true });
-  function float(t) {
-    if (body.classList.contains('is-main')) {
-      mouse.sx += (mouse.x - mouse.sx) * 0.035;
-      mouse.sy += (mouse.y - mouse.sy) * 0.035;
-      const vw = innerWidth / 100, vh = innerHeight / 100, s = t / 1000;
-      shapes.forEach((sh, i) => {
-        const [f1, f2, f3, p1, p2] = seed[i];
-        const dx = (Math.sin(s * f1 + p1) * 0.6 + Math.sin(s * f3 + p2) * 0.4) * 3 * vw + mouse.sx * depth[i] * 4 * vw;
-        const dy = (Math.cos(s * f2 + p2) * 0.6 + Math.sin(s * f1 * 0.7 + p1) * 0.4) * 3 * vh + mouse.sy * depth[i] * 4 * vh;
-        const sc = 1 + Math.sin(s * f2 * 0.8 + p1) * 0.04;
-        sh.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${sc.toFixed(3)})`;
+    if (mraf || !body.classList.contains('is-main')) return;
+    mraf = requestAnimationFrame(() => {
+      mraf = 0;
+      const mx = e.clientX / innerWidth * 2 - 1, my = e.clientY / innerHeight * 2 - 1;
+      blobs.forEach((b, i) => {
+        b.style.setProperty('--tx', `${(mx * depth[i]).toFixed(2)}vw`);
+        b.style.setProperty('--ty', `${(my * depth[i]).toFixed(2)}vh`);
       });
-    }
-    requestAnimationFrame(float);
-  }
-  if (!still) requestAnimationFrame(float);
+    });
+  }, { passive: true });
 
   // ---------- Навигация ----------
   function go(index, { instant = false } = {}) {

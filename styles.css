@@ -75,7 +75,8 @@ button { font: inherit; color: inherit; }
 .blob {
   position: absolute;
   transition: transform 2.2s var(--ease), opacity 2.2s var(--ease),
-              left 2.2s var(--ease), top 2.2s var(--ease), width 2.2s var(--ease), height 2.2s var(--ease);
+              left 2.2s var(--ease), top 2.2s var(--ease), width 2.2s var(--ease), height 2.2s var(--ease),
+              translate 2.4s cubic-bezier(.2, .7, .2, 1);
 }
 .blob__shape { transition: background-color 2.2s var(--ease); }
 .blob__shape {
@@ -106,8 +107,8 @@ body.is-main .blob--2 .blob__shape { background-color: #2967f7; }
 body.is-main .blob--3 { left: calc(10vmax - 8vw); top: calc(10vmax + 90vh); width: 50vmax; height: 50vmax; opacity: .5; }
 body.is-main .blob--3 .blob__shape { background-color: #8dfe59; }
 body.is-main .blob--4 { opacity: 0; }
-/* в основном режиме круги не морфятся и не ходят по кругу — плавный дрейф и реакция на курсор задаются в app.js */
-body.is-main .blob__shape { animation: none; border-radius: 50%; transition: background-color 2.2s var(--ease), border-radius 2.2s var(--ease); }
+/* круги мягко тянутся за курсором (значения --tx/--ty задаёт app.js) */
+body.is-main .blob { translate: var(--tx, 0px) var(--ty, 0px); }
 /* ---------- Основной экран ---------- */
 .deck {
   position: fixed;
@@ -125,11 +126,16 @@ body.is-main .deck { opacity: 1; }
 .roadmap {
   position: relative;
   height: 100vh;
-  padding: var(--pad) var(--rail-gap) 0 var(--pad);
-  overflow: hidden;
+  padding: 0 var(--rail-gap) 0 var(--pad);
 }
 .roadmap__toggle { display: none; }
-.roadmap__track { position: relative; height: 100%; overflow: hidden; }
+.roadmap__track {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--rail-gap)) 0 calc(-1 * var(--pad));
+  padding: var(--pad) var(--rail-gap) 0 var(--pad);
+}
 /* когда барабан прокручен, верхние пункты уходят в прозрачность, а не обрезаются */
 /* затухание как у барабана: полностью видны два пункта от текущего, дальше −20% на пункт */
 @media (min-width: 861px) {
@@ -139,8 +145,11 @@ body.is-main .deck { opacity: 1; }
       #000 calc(var(--mc, 16px) - 2.3 * var(--P, 56px)),
       #000 calc(var(--mc, 16px) + 2.3 * var(--P, 56px)),
       transparent calc(var(--mc, 16px) + 7 * var(--P, 56px)));
-    -webkit-mask-image: var(--fade);
-    mask-image: var(--fade);
+    --edge: linear-gradient(to bottom, transparent 0, #000 var(--pad), #000 calc(100% - 96px), transparent 100%);
+    -webkit-mask-image: var(--fade), var(--edge);
+    -webkit-mask-composite: source-in;
+    mask-image: var(--fade), var(--edge);
+    mask-composite: intersect;
   }
 }
 .roadmap__list {
@@ -263,17 +272,17 @@ body.is-main .step { opacity: 1; transform: none; transition-delay: 0s; }
   margin: 0;
   font-size: var(--fs-base);
   line-height: var(--lh-base);
-  font-weight: 300;
+  font-weight: 200;
   color: #fff;
   text-wrap: pretty;
 }
 .slide p + p, .slide p + ul, .slide ul + p, .slide p + ol, .slide ol + p,
 .slide blockquote + p, .slide p + blockquote, .slide blockquote + blockquote,
 .slide ul + blockquote, .slide p + .template, .slide p + .table-wrap, .slide .table-wrap + p { margin-top: calc(var(--fs-base) * .9); }
-.slide strong, .slide b { font-weight: 300; }
+.slide strong, .slide b { font-weight: 200; }
 .slide a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .slide a:hover { color: var(--blue); }
-.slide s { color: var(--faint); text-decoration-color: var(--faint); }
+.slide s { color: #fff; text-decoration-color: #fff; }
 .slide s.lore { font-family: var(--font-display); font-size: 1.05em; color: #fff; text-decoration-color: #fff; }
 
 .sec { margin-top: clamp(40px, 3.3vw, 64px); }
@@ -392,7 +401,7 @@ aside.draft::before { content: "черновик · "; font-style: normal; font-
 .slide .card p, .slide .card li, .groups > div {
   font-size: var(--fs-card);
   line-height: 1.333;
-  font-weight: 300;
+  font-weight: 200;
   color: #fff;
 }
 .slide .card p + p { margin-top: 0; }
@@ -401,23 +410,23 @@ aside.draft::before { content: "черновик · "; font-style: normal; font-
 
 /* было / стало */
 .compare { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(20px, 1.82vw, 35px); margin-top: calc(var(--fs-base) * .9); }
-.compare > div { font-size: var(--fs-base); line-height: var(--lh-base); font-weight: 300; }
+.compare > div { font-size: var(--fs-base); line-height: var(--lh-base); font-weight: 200; }
 .compare .bad { color: var(--dim); }
-.compare b { font-weight: 300; }
+.compare b { font-weight: 200; }
 
 /* шаблон: «поле — значение» */
 .template { display: grid; gap: 6px; margin-top: calc(var(--fs-base) * .9); }
 .template .field { display: grid; grid-template-columns: minmax(140px, 220px) 1fr; gap: 16px; align-items: baseline; }
 .field__label { font-size: var(--fs-desc); font-weight: 300; color: var(--dim); }
-.field__value { font-size: var(--fs-base); line-height: var(--lh-base); font-weight: 300; color: #fff; }
-.template .field--sub { display: block; padding-left: calc(min(220px, 100%) + 16px); font-size: var(--fs-base); font-weight: 300; }
+.field__value { font-size: var(--fs-base); line-height: var(--lh-base); font-weight: 200; color: #fff; }
+.template .field--sub { display: block; padding-left: calc(min(220px, 100%) + 16px); font-size: var(--fs-base); font-weight: 200; }
 
 /* таблицы */
 .table-wrap { margin-top: calc(var(--fs-base) * .9); overflow-x: auto; }
 .slide table { width: 100%; border-collapse: collapse; }
 .slide th, .slide td { padding: 12px 20px 12px 0; text-align: left; vertical-align: top; border-top: 1px solid var(--line); }
 .slide th { border-top: 0; font-size: var(--fs-desc); font-weight: 300; color: var(--dim); }
-.slide td:first-child { font-weight: 300; min-width: 180px; }
+.slide td:first-child { font-weight: 200; min-width: 180px; }
 
 /* «От себя» */
 .personal p + p { margin-top: calc(var(--fs-base) * .9); }
@@ -434,7 +443,7 @@ aside.draft::before { content: "черновик · "; font-style: normal; font-
   letter-spacing: -.0025em;
   color: #fff;
 }
-.slide .thanks__note { margin-top: 8px; font-size: clamp(16px, 1.25vw, 24px); font-weight: 300; }
+.slide .thanks__note { margin-top: 8px; font-size: clamp(16px, 1.25vw, 24px); font-weight: 200; }
 
 /* ---------- Средние экраны ---------- */
 @media (max-width: 1280px) {
@@ -465,6 +474,7 @@ aside.draft::before { content: "черновик · "; font-style: normal; font-
     position: absolute;
     left: 16px; right: 16px; top: calc(100% - 8px);
     height: auto;
+    margin: 0;
     max-height: 70vh;
     overflow-y: auto;
     padding: 20px;
