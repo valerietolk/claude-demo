@@ -118,7 +118,8 @@
         <span class="step__dot" aria-hidden="true"></span>
         <span class="step__title"></span>
       </button>`;
-    li.querySelector('.step__title').textContent = s.title;
+    // перенос после «/», а не посреди слова
+    li.querySelector('.step__title').innerHTML = s.title.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])).replace(/\//g, '/<wbr>');
     li.querySelector('.step__btn').addEventListener('click', () => {
       if (i === current) slides[i].scrollTo({ top: 0, behavior: 'smooth' });
       go(i);
@@ -128,19 +129,99 @@
     return li;
   });
 
-  // Текущий пункт держится на третьей строке; соседние видны целиком,
-  // дальше каждый следующий на 20% прозрачнее — как барабан в iOS.
+  // Барабан, как в iOS: текущий пункт стоит на третьей строке, два соседа видны
+  // целиком, дальше каждый следующий на 20% прозрачнее. Колёсиком над степпером
+  // барабан прокручивается, после паузы возвращается к текущему слайду.
+  const track = document.querySelector('.roadmap__track');
+  const dotY = s => s.offsetTop + s.querySelector('.step__dot').offsetTop + 4;
+  let offset = 0;          // на сколько пикселей прокручен список
+  let centerTop = 0;       // где на экране стоит текущий пункт
+  let browsing = false;    // крутят колёсиком
+  let snapT = 0, backT = 0;
+
+  function applyOffset(off, fast) {
+    offset = off;
+    list.style.transition = fast ? 'transform .3s var(--ease)' : '';
+    list.style.transform = `translateY(${-off}px)`;
+    // пункт в центре барабана
+    let best = 0, bd = Infinity;
+    steps.forEach((s, i) => {
+      const d = Math.abs(s.offsetTop - off - centerTop);
+      if (d < bd) { bd = d; best = i; }
+    });
+    steps.forEach((s, i) => s.classList.toggle('is-center', browsing && i === best));
+  }
+
+  function drawRail() {
+    const ys = steps.map(dotY);
+    const top = ys[0], bottom = ys[ys.length - 1];
+    let lines = '', dots = '';
+    ys.forEach((y, i) => {
+      if (i < ys.length - 1) lines += `<line x1="4" y1="${y + 4}" x2="4" y2="${ys[i + 1] - 4}"/>`;
+      dots += `<circle cx="4" cy="${y}" r="4"/>`;
+    });
+    const a = ys[Math.max(0, current)];
+    rail.setAttribute('height', bottom + 20);
+    rail.innerHTML = `
+      <defs>
+        <linearGradient id="rail-g" gradientUnits="userSpaceOnUse" x1="0" y1="${top}" x2="0" y2="${bottom}">
+          <stop offset="0" stop-color="#0088ff"/><stop offset="1" stop-color="#00ffff"/>
+        </linearGradient>
+      </defs>
+      <g stroke="url(#rail-g)" stroke-width="1">${lines}</g>
+      <g fill="url(#rail-g)">${dots}</g>
+      ${current >= 0 ? `<circle class="rail__active" cx="4" cy="${a}" r="4.5" fill="#0089ff"/>` : ''}`;
+  }
+  const rail = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  rail.setAttribute('class', 'rail');
+  rail.setAttribute('width', 8);
+  rail.setAttribute('aria-hidden', 'true');
+  list.prepend(rail);
+
   function drum() {
     if (current < 0) return;
-    const a = steps[current];
-    const shift = Math.max(0, a.offsetTop - steps[Math.min(2, current)].offsetTop);
-    list.style.transform = `translateY(${-shift}px)`;
-    roadmap.classList.toggle('is-shifted', shift > 0);
-    steps.forEach((s, i) => {
-      const d = Math.abs(i - current);
-      s.style.setProperty('--fade', Math.max(0, 1 - Math.max(0, d - 2) * 0.2).toFixed(2));
-    });
+    const anchor = steps[Math.min(2, steps.length - 1)].offsetTop;
+    const base = Math.max(0, steps[current].offsetTop - anchor);
+    centerTop = steps[current].offsetTop - base;
+    const pitch = steps[1].offsetTop - steps[0].offsetTop;
+    const row = dotY(steps[current]) - steps[current].offsetTop;
+    track.style.setProperty('--mc', `${centerTop + row}px`);
+    track.style.setProperty('--P', `${pitch}px`);
+    drawRail();
+    if (!browsing) applyOffset(base);
   }
+
+  function snap() {
+    let best = offset, bd = Infinity;
+    steps.forEach(s => {
+      const o = s.offsetTop - centerTop;
+      if (Math.abs(o - offset) < bd) { bd = Math.abs(o - offset); best = o; }
+    });
+    applyOffset(best, true);
+  }
+  function release() {
+    browsing = false;
+    steps.forEach(s => s.classList.remove('is-center'));
+    drum();
+  }
+
+  roadmap.addEventListener('wheel', e => {
+    if (current < 0 || matchMedia('(max-width: 860px)').matches) return;
+    e.preventDefault();
+    browsing = true;
+    const min = steps[0].offsetTop - centerTop;
+    const max = steps[steps.length - 1].offsetTop - centerTop;
+    applyOffset(Math.max(min, Math.min(max, offset + e.deltaY * 0.6)), true);
+    clearTimeout(snapT);
+    snapT = setTimeout(snap, 140);
+    clearTimeout(backT);
+  }, { passive: false });
+  roadmap.addEventListener('mouseleave', () => {
+    if (!browsing) return;
+    clearTimeout(backT);
+    backT = setTimeout(release, 900);
+  });
+  roadmap.addEventListener('mouseenter', () => clearTimeout(backT));
 
   // ---------- Навигация ----------
   function go(index, { instant = false } = {}) {
@@ -175,6 +256,8 @@
     });
     toggleNum.textContent = pad(index + 1);
     toggleTitle.textContent = SLIDES[index].title;
+    browsing = false;
+    steps.forEach(s => s.classList.remove('is-center'));
     drum();
 
     const hash = `#${next.id}`;
