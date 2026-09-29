@@ -158,7 +158,7 @@
     let lines = '', dots = '';
     ys.forEach((y, i) => {
       if (i < ys.length - 1) lines += `<line x1="4" y1="${y + 4}" x2="4" y2="${ys[i + 1] - 4}"/>`;
-      dots += `<circle cx="4" cy="${y}" r="4"/>`;
+      dots += `<circle cx="4" cy="${y}" r="3.25"/>`;
     });
     const a = ys[Math.max(0, current)];
     rail.setAttribute('height', bottom + 20);
@@ -169,8 +169,8 @@
         </linearGradient>
       </defs>
       <g stroke="url(#rail-g)" stroke-width="1">${lines}</g>
-      <g fill="url(#rail-g)">${dots}</g>
-      ${current >= 0 ? `<circle class="rail__active" cx="4" cy="${a}" r="4.5" fill="#0089ff"/>` : ''}`;
+      <g fill="none" stroke="url(#rail-g)" stroke-width="1.5">${dots}</g>
+      ${current >= 0 ? `<circle class="rail__active" cx="4" cy="${a}" r="4" fill="#0089ff"/>` : ''}`;
   }
   const rail = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   rail.setAttribute('class', 'rail');
@@ -222,6 +222,35 @@
     backT = setTimeout(release, 900);
   });
   roadmap.addEventListener('mouseenter', () => clearTimeout(backT));
+
+  // ---------- Фон: неспешный дрейф и отклик на курсор ----------
+  // Сумма синусоид с несоизмеримыми периодами (от 1,5 до 4 минут) не повторяется,
+  // поэтому цикла не видно. Курсор слегка тянет круги за собой, каждый со своей глубиной.
+  const shapes = [...document.querySelectorAll('.blob__shape')];
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
+  const depth = [1, -0.7, 0.55, 0];
+  const seed = shapes.map((_, i) => [0.021 + i * 0.0043, 0.033 - i * 0.0031, 0.017 + i * 0.0057, 1.3 * i, 2.1 * i]);
+  window.addEventListener('pointermove', e => {
+    mouse.x = e.clientX / innerWidth * 2 - 1;
+    mouse.y = e.clientY / innerHeight * 2 - 1;
+  }, { passive: true });
+  function float(t) {
+    if (body.classList.contains('is-main')) {
+      mouse.sx += (mouse.x - mouse.sx) * 0.035;
+      mouse.sy += (mouse.y - mouse.sy) * 0.035;
+      const vw = innerWidth / 100, vh = innerHeight / 100, s = t / 1000;
+      shapes.forEach((sh, i) => {
+        const [f1, f2, f3, p1, p2] = seed[i];
+        const dx = (Math.sin(s * f1 + p1) * 0.6 + Math.sin(s * f3 + p2) * 0.4) * 3 * vw + mouse.sx * depth[i] * 4 * vw;
+        const dy = (Math.cos(s * f2 + p2) * 0.6 + Math.sin(s * f1 * 0.7 + p1) * 0.4) * 3 * vh + mouse.sy * depth[i] * 4 * vh;
+        const sc = 1 + Math.sin(s * f2 * 0.8 + p1) * 0.04;
+        sh.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${sc.toFixed(3)})`;
+      });
+    }
+    requestAnimationFrame(float);
+  }
+  if (!still) requestAnimationFrame(float);
 
   // ---------- Навигация ----------
   function go(index, { instant = false } = {}) {

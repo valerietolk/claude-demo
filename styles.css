@@ -106,17 +106,8 @@ body.is-main .blob--2 .blob__shape { background-color: #2967f7; }
 body.is-main .blob--3 { left: calc(10vmax - 8vw); top: calc(10vmax + 90vh); width: 50vmax; height: 50vmax; opacity: .5; }
 body.is-main .blob--3 .blob__shape { background-color: #8dfe59; }
 body.is-main .blob--4 { opacity: 0; }
-body.is-main .blob__shape { animation-name: morph, drift-main; }
-body.is-main .blob--1 .blob__shape { animation-duration: 9s, 13s; }
-body.is-main .blob--2 .blob__shape { animation-duration: 11s, 12s; }
-body.is-main .blob--3 .blob__shape { animation-duration: 8s, 10s; }
-@keyframes drift-main {
-  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
-  25%  { transform: translate(12vw, -8vh) rotate(60deg) scale(1.15); }
-  50%  { transform: translate(-8vw, 10vh) rotate(130deg) scale(.9); }
-  75%  { transform: translate(9vw, 7vh) rotate(210deg) scale(1.1); }
-  100% { transform: translate(-11vw, -6vh) rotate(300deg) scale(1); }
-}
+/* в основном режиме круги не морфятся и не ходят по кругу — плавный дрейф и реакция на курсор задаются в app.js */
+body.is-main .blob__shape { animation: none; border-radius: 50%; transition: background-color 2.2s var(--ease), border-radius 2.2s var(--ease); }
 /* ---------- Основной экран ---------- */
 .deck {
   position: fixed;
@@ -176,7 +167,7 @@ body.is-main .step { opacity: 1; transform: none; transition-delay: 0s; }
 
 /* точки и линии рисуются одной SVG-фигурой с общим градиентом, как Union в Figma */
 .rail { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
-.rail__active { filter: drop-shadow(0 0 6px #0189ff) drop-shadow(0 0 3px #0189ff); }
+.rail__active { filter: drop-shadow(0 0 4px rgba(0, 137, 255, .9)); }
 .step__btn {
   --row: calc(var(--fs-base) * var(--lh-base));
   display: grid;
@@ -282,7 +273,8 @@ body.is-main .step { opacity: 1; transform: none; transition-delay: 0s; }
 .slide strong, .slide b { font-weight: 300; }
 .slide a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .slide a:hover { color: var(--blue); }
-.slide s { font-family: var(--font-display); font-size: 1.05em; color: var(--faint); text-decoration-color: var(--faint); }
+.slide s { color: var(--faint); text-decoration-color: var(--faint); }
+.slide s.lore { font-family: var(--font-display); font-size: 1.05em; color: #fff; text-decoration-color: #fff; }
 
 .sec { margin-top: clamp(40px, 3.3vw, 64px); }
 .slide h3 {
