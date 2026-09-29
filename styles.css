@@ -11,7 +11,7 @@
 
 /* ---------- Токены ---------- */
 :root {
-  --bg-start: #b9c8d4;
+  --bg-start: #b5c9d5;
   --bg-main: #101012;
   --text: #e9e6e1;
   --text-dim: #a6a29c;
@@ -64,51 +64,99 @@ body {
 body.is-main { background: var(--bg-main); }
 button { font: inherit; color: inherit; }
 
-/* ---------- Фон: мягкие фигуры ---------- */
+/* ---------- Фон: круги из Figma ----------
+   Координаты и размеры — из кадра 1920×1080: x → vw, y → vh, диаметр → vw.
+   Layer blur 400 в Figma ≈ blur(200px) в CSS. */
 .blobs {
   position: fixed;
-  inset: -10vmax;
+  inset: 0;
   pointer-events: none;
-  filter: blur(90px) saturate(1.1);
+  filter: blur(10.42vw);
   z-index: 0;
 }
 .blob {
   position: absolute;
-  transition: transform 2.2s var(--ease), opacity 2.2s var(--ease),
-              left 2.2s var(--ease), top 2.2s var(--ease), width 2.2s var(--ease), height 2.2s var(--ease),
+  opacity: 1;
+  transition: opacity 2.2s var(--ease), left 2.2s var(--ease), top 2.2s var(--ease),
+              width 2.2s var(--ease), height 2.2s var(--ease),
               translate 2.4s cubic-bezier(.2, .7, .2, 1);
 }
-.blob__shape { transition: background-color 2.2s var(--ease); }
 .blob__shape {
   width: 100%;
   height: 100%;
   border-radius: 42% 58% 63% 37% / 45% 40% 60% 55%;
   animation: morph 18s ease-in-out infinite alternate,
              drift 26s ease-in-out infinite alternate;
+  transition: background-color 2.2s var(--ease);
   will-change: transform, border-radius;
 }
 
-/* Стартовая раскладка: как во фрейме «start» */
-.blob--1 { width: 62vmax; height: 62vmax; left: 8vw;  top: 0vh;  }
-.blob--1 .blob__shape { background: #fcbf57; animation-duration: 17s, 29s; }
-.blob--2 { width: 55vmax; height: 55vmax; left: 52vw; top: 38vh; }
-.blob--2 .blob__shape { background: #f5712a; animation-duration: 21s, 23s; animation-delay: -6s, -4s; }
-.blob--3 { width: 34vmax; height: 34vmax; left: 38vw; top: 30vh; }
-.blob--3 .blob__shape { background: #f9a24a; animation-duration: 15s, 19s; animation-delay: -3s, -11s; }
-.blob--4 { width: 30vmax; height: 30vmax; left: 70vw; top: -6vh; }
-.blob--4 .blob__shape { background: #d9b89a; opacity: .7; animation-duration: 23s, 31s; animation-delay: -9s, -2s; }
+/* Стартовый экран — фрейм «start» (Frame 5): две жёлтые и две оранжевые */
+.blob--1 { left: 4.58vw;  top: 0;       width: 66.82vw; height: 66.82vw; }
+.blob--2 { left: 11.41vw; top: 12.04vh; width: 54.27vw; height: 54.27vw; }
+.blob--3 { left: 48.75vw; top: 26.11vh; width: 56.25vw; height: 56.25vw; }
+.blob--4 { left: 68.8vw;  top: 50.09vh; width: 43.23vw; height: 43.23vw; }
+.blob--1 .blob__shape { background-color: #febf59; animation-duration: 17s, 29s; }
+.blob--2 .blob__shape { background-color: #febf59; animation-duration: 21s, 23s; animation-delay: -6s, -4s; }
+.blob--3 .blob__shape { background-color: #f77329; animation-duration: 15s, 19s; animation-delay: -3s, -11s; }
+.blob--4 .blob__shape { background-color: #f77329; animation-duration: 23s, 31s; animation-delay: -9s, -2s; }
 
-/* Основной экран — как в макетах: зелёное свечение сверху, салатовое слева внизу, синее справа внизу */
-body.is-main .blob { transform: none; }
-body.is-main .blob--1 { left: calc(10vmax + 38vw - 30vmax); top: calc(10vmax + 16vh - 60vmax); width: 60vmax; height: 60vmax; opacity: .42; }
-body.is-main .blob--1 .blob__shape { background-color: #00ffae; }
-body.is-main .blob--2 { left: calc(10vmax + 84vw); top: calc(10vmax + 74vh); width: 44vmax; height: 44vmax; opacity: .42; }
-body.is-main .blob--2 .blob__shape { background-color: #2967f7; }
-body.is-main .blob--3 { left: calc(10vmax - 8vw); top: calc(10vmax + 90vh); width: 50vmax; height: 50vmax; opacity: .5; }
-body.is-main .blob--3 .blob__shape { background-color: #8dfe59; }
+/* Основной экран — фреймы «possible layout», «chat», «claude in chrome» */
+body.is-main .blob--1 { left: 4.58vw;   top: -115.74vh; width: 66.82vw; height: 66.82vw; opacity: .4; }
+body.is-main .blob--2 { left: -4.27vw;  top: 101.3vh;   width: 54.27vw; height: 54.27vw; opacity: 1; }
+body.is-main .blob--3 { left: 82.76vw;  top: 76.94vh;   width: 43.23vw; height: 43.23vw; opacity: .4; }
 body.is-main .blob--4 { opacity: 0; }
+body.is-main .blob--1 .blob__shape { background-color: #00ffae; }
+body.is-main .blob--2 .blob__shape { background-color: #8dfe59; }
+body.is-main .blob--3 .blob__shape { background-color: #2967f7; }
 /* круги мягко тянутся за курсором (значения --tx/--ty задаёт app.js) */
 body.is-main .blob { translate: var(--tx, 0px) var(--ty, 0px); }
+
+@keyframes morph {
+  0%   { border-radius: 42% 58% 63% 37% / 45% 40% 60% 55%; }
+  33%  { border-radius: 63% 37% 41% 59% / 58% 62% 38% 42%; }
+  66%  { border-radius: 36% 64% 55% 45% / 38% 55% 45% 62%; }
+  100% { border-radius: 55% 45% 36% 64% / 62% 38% 62% 38%; }
+}
+@keyframes drift {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+  25%  { transform: translate(6vw, -5vh) rotate(40deg) scale(1.06); }
+  50%  { transform: translate(-4vw, 6vh) rotate(90deg) scale(.95); }
+  75%  { transform: translate(5vw, 4vh) rotate(150deg) scale(1.04); }
+  100% { transform: translate(-6vw, -3vh) rotate(200deg) scale(1); }
+}
+
+/* ---------- Стартовый экран: белый логотип Claude по центру, и всё ---------- */
+.start {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  color: #f4f6f8;
+  transition: opacity .9s var(--ease), transform 1.2s var(--ease), filter .9s var(--ease);
+}
+.start:focus-visible .start__logo { outline: 2px solid #fff; outline-offset: 16px; border-radius: 8px; }
+.start__logo {
+  width: max(200px, 20.99vw);
+  height: auto;
+  animation: logo-in 1.6s var(--ease) both;
+}
+body.is-main .start {
+  opacity: 0;
+  transform: scale(1.08);
+  filter: blur(8px);
+  pointer-events: none;
+}
+@keyframes logo-in {
+  from { opacity: 0; transform: translateY(12px) scale(.96); filter: blur(6px); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+
 /* ---------- Основной экран ---------- */
 .deck {
   position: fixed;
@@ -196,22 +244,22 @@ body.is-main .step { opacity: 1; transform: none; transition-delay: 0s; }
   height: 8px;
   margin-top: calc(.5 * var(--row) - 4px);
 }
-.step__title {
+.step__title { display: grid; }
+.step__title .t {
+  grid-area: 1 / 1;
   font-size: var(--fs-base);
-  line-height: var(--lh-base);
+  line-height: var(--row);
   font-weight: 300;
   color: var(--ink);
-  transition: color .3s var(--ease);
+  transition: opacity .35s var(--ease), color .3s var(--ease);
 }
-.step__btn:hover .step__title { color: #fff; }
+.step__title .t--act { font-size: calc(var(--fs-base) * 1.09); font-weight: 600; color: var(--blue); opacity: 0; }
+.step__btn:hover .t--reg { color: #fff; }
 .step__btn:focus-visible { outline: none; }
 .step__btn:focus-visible .step__title { text-decoration: underline; text-underline-offset: 4px; }
-.step.is-active .step__title {
-  font-size: calc(var(--fs-base) * 1.09);
-  font-weight: 600;
-  color: var(--blue);
-}
-.step.is-center:not(.is-active) .step__title { color: #fff; font-weight: 400; }
+.step.is-active .t--reg { opacity: 0; }
+.step.is-active .t--act { opacity: 1; }
+.step.is-center:not(.is-active) .t--reg { color: #fff; }
 
 /* ---------- Слайды ---------- */
 .slides { position: relative; overflow: hidden; }
@@ -280,6 +328,7 @@ body.is-main .step { opacity: 1; transform: none; transition-delay: 0s; }
 .slide blockquote + p, .slide p + blockquote, .slide blockquote + blockquote,
 .slide ul + blockquote, .slide p + .template, .slide p + .table-wrap, .slide .table-wrap + p { margin-top: calc(var(--fs-base) * .9); }
 .slide strong, .slide b { font-weight: 200; }
+.slide b.key { font-weight: 600; }
 .slide a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .slide a:hover { color: var(--blue); }
 .slide s { color: #fff; text-decoration-color: #fff; }
@@ -500,6 +549,6 @@ aside.draft::before { content: "черновик · "; font-style: normal; font-
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .blob__shape, .start__hint { animation: none; }
+  .blob__shape, .start__logo { animation: none; }
   *, *::before, *::after { transition-duration: .01ms !important; transition-delay: 0s !important; }
 }

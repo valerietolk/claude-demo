@@ -119,7 +119,10 @@
         <span class="step__title"></span>
       </button>`;
     // перенос после «/», а не посреди слова
-    li.querySelector('.step__title').innerHTML = s.title.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])).replace(/\//g, '/<wbr>');
+    // обычное и активное начертание лежат друг на друге: высота пункта не меняется,
+    // и колонка не дёргается при переходе между слайдами
+    const txt = s.title.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])).replace(/\//g, '/<wbr>');
+    li.querySelector('.step__title').innerHTML = `<span class="t t--reg">${txt}</span><span class="t t--act" aria-hidden="true">${txt}</span>`;
     li.querySelector('.step__btn').addEventListener('click', () => {
       if (i === current) slides[i].scrollTo({ top: 0, behavior: 'smooth' });
       go(i);
