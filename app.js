@@ -61,10 +61,145 @@
     });
     inner.querySelectorAll('ol[start]').forEach(ol => { ol.style.counterReset = `n ${ol.start - 1}`; });
     inner.querySelectorAll('a[href^="http"]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
-    inner.querySelectorAll('h3').forEach((h, i) => { h.id = slug(h.textContent, i); });
+    enhance(inner);
+    inner.querySelectorAll(':scope > .sec > h3').forEach((h, i) => { h.id = slug(h.textContent, i); });
     [...inner.children].forEach((el, j) => el.style.setProperty('--i', Math.min(j, 10)));
     buildSubsteps(index);
   }
+
+  // ---------- Подача содержимого: стеклянные плитки, схемы, промпты ----------
+  const el = (tag, cls, html) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html != null) n.innerHTML = html;
+    return n;
+  };
+
+  function enhance(inner) {
+    // 🔥 — отдельной меткой
+    const walker = document.createTreeWalker(inner, NodeFilter.SHOW_TEXT);
+    const fire = [];
+    while (walker.nextNode()) if (walker.currentNode.nodeValue.includes('🔥')) fire.push(walker.currentNode);
+    fire.forEach(node => {
+      const frag = document.createDocumentFragment();
+      node.nodeValue.split('🔥').forEach((part, i) => {
+        if (i) frag.appendChild(el('span', 'hot', '🔥'));
+        if (part) frag.appendChild(document.createTextNode(part));
+      });
+      node.replaceWith(frag);
+    });
+
+    // промпты: стеклянное «сообщение» с кнопкой копирования
+    inner.querySelectorAll('blockquote').forEach(q => {
+      q.classList.add('prompt', 'glass');
+      q.prepend(el('span', 'prompt__label', 'промпт'));
+      const b = el('button', 'prompt__copy', 'Скопировать');
+      b.type = 'button';
+      q.appendChild(b);
+    });
+
+    // шаблон: поля формы «название — значение»
+    inner.querySelectorAll('.template').forEach(t => {
+      t.classList.add('glass');
+      [...t.children].forEach(row => {
+        const b = row.querySelector(':scope > b:first-child');
+        row.className = 'field';
+        if (!b) { row.classList.add('field--sub'); return; }
+        const label = el('span', 'field__label', b.textContent.replace(/:\s*$/, ''));
+        b.remove();
+        const value = el('span', 'field__value', row.innerHTML.trim() || '&nbsp;');
+        if (!row.textContent.trim()) value.classList.add('is-empty');
+        row.innerHTML = '';
+        row.append(label, value);
+      });
+    });
+
+    // группы коннекторов: плитка + капсулы сервисов
+    inner.querySelectorAll('.groups > div').forEach(g => {
+      const b = g.querySelector('b');
+      const rest = g.innerHTML.replace(b.outerHTML, '');
+      g.className = 'group glass';
+      g.innerHTML = '';
+      g.append(el('p', 'group__title', b.innerHTML),
+        el('div', 'chips', rest.split('·').map(s => `<span class="chip">${s.trim()}</span>`).join('')));
+    });
+
+    // маршруты «задача → инструмент»
+    inner.querySelectorAll('.routes > span').forEach(r => {
+      const [what, where] = r.innerHTML.split('→');
+      r.className = 'route';
+      r.innerHTML = `<span class="route__what">${what.trim()}</span><span class="route__arrow" aria-hidden="true"></span><span class="route__where glass">${(where || '').trim()}</span>`;
+    });
+
+    inner.querySelectorAll('.compare > div, .card, .table-wrap, .fact, .warn, .note').forEach(n => n.classList.add('glass'));
+
+    // списки «**Правило.** пояснение» — нумерованные плитки
+    inner.querySelectorAll('ol, ul').forEach(ol => {
+      const lis = [...ol.children];
+      if (lis.length < 3 || ol.closest('.card, .item, .template, li')) return;
+      const startsBold = li => {
+        const head = li.firstElementChild && li.firstElementChild.tagName === 'P' ? li.firstElementChild : li;
+        return head.firstElementChild && head.firstElementChild.tagName === 'STRONG' && head.firstChild === head.firstElementChild;
+      };
+      if (!lis.every(startsBold)) return;
+      ol.classList.add('tiles');
+      lis.forEach(li => li.classList.add('tile', 'glass'));
+    });
+
+    // разделы по h3, сценарии по h4
+    const kids = [...inner.childNodes];
+    let box = null, grid = null, item = null;
+    kids.forEach(n => {
+      if (n.nodeType === 3 && !n.nodeValue.trim()) return;
+      const tag = n.nodeName;
+      if (tag === 'H1' || (tag === 'H2' && n.classList.contains('slide__lead'))) return;
+      if (tag === 'H3') {
+        box = el('section', 'sec');
+        n.after(box);
+        box.appendChild(n);
+        grid = item = null;
+        return;
+      }
+      if (tag === 'H4') {
+        if (!grid) {
+          grid = el('div', 'items');
+          if (box) box.appendChild(grid); else inner.insertBefore(grid, n);
+        }
+        const m = n.textContent.match(/^\s*(\d+)\.\s*/);
+        if (m) {
+          const first = n.firstChild;
+          if (first && first.nodeType === 3) first.nodeValue = first.nodeValue.replace(/^\s*\d+\.\s*/, '');
+          n.prepend(el('span', 'item__num', String(m[1]).padStart(2, '0')));
+        }
+        item = el('article', 'item glass');
+        if (n.querySelector('.hot')) item.classList.add('item--hot');
+        grid.appendChild(item);
+        item.appendChild(n);
+        return;
+      }
+      if (item) item.appendChild(n);
+      else if (box) box.appendChild(n);
+    });
+  }
+
+  // копирование промпта
+  main.addEventListener('click', e => {
+    const b = e.target.closest('.prompt__copy');
+    if (!b) return;
+    const q = b.closest('.prompt').cloneNode(true);
+    q.querySelectorAll('.prompt__copy, .prompt__label').forEach(n => n.remove());
+    const done = () => { b.textContent = 'Скопировано'; b.classList.add('is-done'); setTimeout(() => { b.textContent = 'Скопировать'; b.classList.remove('is-done'); }, 1600); };
+    try { navigator.clipboard.writeText(q.textContent.trim()).then(done, () => {}); } catch {}
+  });
+
+  // блик на стекле следует за курсором
+  main.addEventListener('pointermove', e => {
+    const g = e.target.closest('.glass');
+    if (!g) return;
+    const r = g.getBoundingClientRect();
+    g.style.setProperty('--mx', `${e.clientX - r.left}px`);
+    g.style.setProperty('--my', `${e.clientY - r.top}px`);
+  }, { passive: true });
 
   const loaded = Promise.all(SLIDES.map((s, i) =>
     fetch(s.file)
@@ -104,7 +239,7 @@
   function buildSubsteps(i) {
     const ol = steps[i].querySelector('.substeps__list');
     ol.innerHTML = '';
-    slides[i].querySelectorAll('.slide__inner > h3').forEach(h => {
+    slides[i].querySelectorAll('.slide__inner > .sec > h3').forEach(h => {
       const li = document.createElement('li');
       const b = document.createElement('button');
       b.type = 'button';
