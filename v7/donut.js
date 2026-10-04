@@ -4,7 +4,7 @@
    в сборе они стыкуются без швов, поэтому он может трескаться, разлетаться, собираться и снова
    становиться целым.
    Снаружи: DONUT.render(t) — кадр в момент t (0…10 с), DONUT.mouse(x, y), DONUT.shift(доля ширины),
-   DONUT.colors({base, spots, inner}) и DONUT.material / DONUT.lights / DONUT.group для экспериментов. */
+   DONUT.colors({base, spots, inner, bounce}), DONUT.place(x, y, z) и DONUT.material / DONUT.lights / DONUT.group для экспериментов. */
 (function () {
   "use strict";
   var THREE = window.THREE;
@@ -143,7 +143,7 @@
 
   // ---------- сцена ----------
   var canvas, renderer, scene, camera, group, floor, dust, debris, whole, chunks = [], debrisData = [];
-  var material, fracture, lights = {}, shiftX = 0;
+  var material, fracture, lights = {}, shiftX = 0, extra = new THREE.Vector3();
   var mouse = { x: 0, y: 0, sx: 0, sy: 0 };
 
   function buildWhole() {
@@ -299,15 +299,15 @@
   // окружение для мягких бликов: тёплая комната с несколькими «софтбоксами»
   function buildEnv() {
     var env = new THREE.Scene();
-    env.add(new THREE.Mesh(new THREE.BoxGeometry(12, 12, 12), new THREE.MeshBasicMaterial({ color: 0x4a2a1c, side: THREE.BackSide })));
+    env.add(new THREE.Mesh(new THREE.BoxGeometry(12, 12, 12), new THREE.MeshBasicMaterial({ color: 0x3a3634, side: THREE.BackSide })));
     function box(w, h, x, y, z, c, k) {
       var mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(k), side: THREE.DoubleSide });
       var m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
       m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m);
     }
     box(7, 4, -3, 5, 3, 0xffffff, 5);       // большой сверху слева
-    box(3, 6, 5.5, 0.5, 1, 0xffd2a8, 2.4);   // тёплый справа
-    box(6, 2, 0, -5, 2, 0xffa070, 1.4);      // отражённый снизу, от оранжевого фона
+    box(3, 6, 5.5, 0.5, 1, 0xfff0e2, 2.4);   // мягкий справа
+    box(6, 2, 0, -5, 2, 0xffffff, 1.0);      // отражённый снизу
     box(3, 3, -2, 1, -5.5, 0xfff1e0, 2);     // контровой
     var pm = new THREE.PMREMGenerator(renderer);
     var tex = pm.fromScene(env, 0.035).texture;
@@ -429,7 +429,7 @@
     camera.position.set(f.cam[0] * kc, f.cam[1], f.cam[2] * kc);
     camera.lookAt(f.look[0], f.look[1], f.look[2]);
     mouse.sx += (mouse.x - mouse.sx) * 0.06; mouse.sy += (mouse.y - mouse.sy) * 0.06;
-    group.position.set(f.p[0], f.p[1], f.p[2]);
+    group.position.set(f.p[0] + extra.x, f.p[1] + extra.y, f.p[2] + extra.z);
     group.rotation.set(f.rot[0] + mouse.sy * 0.08, f.rot[1] + mouse.sx * 0.12, f.rot[2]);
     group.scale.setScalar(f.s);
 
@@ -498,7 +498,8 @@
     function lin(c, v) { c.set(v).convertSRGBToLinear(); }
     if (o.base != null) lin(material.userData.u.uColA.value, o.base);
     if (o.spots != null) lin(material.userData.u.uColB.value, o.spots);
-    if (o.inner != null) { lin(fracture.userData.u.uColA.value, o.inner); lin(fracture.userData.u.uColB.value, o.inner); }
+    if (o.inner != null) { lin(fracture.userData.u.uColA.value, o.inner); lin(fracture.userData.u.uColB.value, o.inner); dust.material.color.set(o.inner); }
+    if (o.bounce != null) lights.hemi.groundColor.set(o.bounce);   // отсвет от фона снизу
   }
 
   window.DONUT = {
@@ -508,6 +509,8 @@
     mouse: function (x, y) { mouse.x = x; mouse.y = y; },
     shift: function (fx) { if (Math.abs(fx - shiftX) > 1e-4) { shiftX = fx; applyShift(); } },
     colors: colors,
+    // дополнительный сдвиг бублика в мире (x, y, z) — чтобы он въезжал с разных сторон
+    place: function (x, y, z) { extra.set(x || 0, y || 0, z || 0); },
     get material() { return material; },
     get fracture() { return fracture; },
     get lights() { return lights; },

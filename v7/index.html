@@ -8,7 +8,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700&display=swap" rel="stylesheet">
 <style>
 @font-face{
   font-family:"LORE Cyrillic";
@@ -17,8 +17,9 @@
 }
 :root{
   --ink:#1f0d04;
-  --ink-soft:rgba(31,13,4,.66);
-  --ink-faint:rgba(31,13,4,.42);
+  /* весь текст — одним цветом (так проще править) */
+  --ink-soft:var(--ink);
+  --ink-faint:var(--ink);
   --rule:rgba(31,13,4,.16);
   --glass:rgba(255,236,214,.26);
   --orange:#FF7645;
@@ -40,10 +41,11 @@ body{
 
 /* ---------- пространство: тёплый свет сверху, глубина к краям ---------- */
 .stage{ position:fixed; inset:0; z-index:0; overflow:hidden;
+  --c1:#FDBC57; --c2:#FF8A4A; --c3:#FF7645; --c4:rgba(232,84,40,.55);
   background:
-    radial-gradient(70% 55% at 50% 30%, rgba(253,188,87,.95) 0%, rgba(253,188,87,0) 70%),
-    radial-gradient(120% 90% at 50% 110%, rgba(232,84,40,.55) 0%, rgba(232,84,40,0) 60%),
-    linear-gradient(180deg, #FDA552 0%, #FF8A4A 45%, #FF7645 100%);
+    radial-gradient(70% 55% at 50% 30%, var(--c1) 0%, transparent 70%),
+    radial-gradient(120% 90% at 50% 110%, var(--c4) 0%, transparent 60%),
+    linear-gradient(180deg, var(--c1) 0%, var(--c2) 45%, var(--c3) 100%);
 }
 .stage canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; opacity:0; transition:opacity 1.2s var(--ease-out); }
 .stage canvas.on{ opacity:1; }
@@ -67,10 +69,10 @@ body{
 .chapter + .chapter{ border-top:1px solid var(--rule); }
 .num{ display:block; margin-bottom:22px; font-size:13px; font-weight:400; letter-spacing:.06em; color:var(--ink-faint); }
 
-.doc h1{ overflow-wrap:break-word; font-weight:300; font-size:clamp(44px, 6vw, 84px); line-height:.98; letter-spacing:-.04em; text-wrap:balance; }
-.doc h2{ margin-top:22px; font-weight:300; font-size:clamp(19px, 1.7vw, 24px); line-height:1.35; letter-spacing:-.015em; color:var(--ink-soft); text-wrap:balance; }
-.doc h3{ margin-top:clamp(56px, 9vh, 96px); padding-top:22px; border-top:1px solid var(--rule); font-weight:300; font-size:clamp(26px, 3vw, 40px); line-height:1.08; letter-spacing:-.03em; text-wrap:balance; }
-.doc h4{ margin-top:40px; font-weight:400; font-size:clamp(18px, 1.5vw, 21px); line-height:1.3; letter-spacing:-.014em; }
+.doc h1{ overflow-wrap:break-word; font-weight:700; font-size:clamp(44px, 6vw, 84px); line-height:.98; letter-spacing:-.04em; text-wrap:balance; }
+.doc h2{ margin-top:22px; font-weight:700; font-size:clamp(19px, 1.7vw, 24px); line-height:1.35; letter-spacing:-.015em; color:var(--ink-soft); text-wrap:balance; }
+.doc h3{ margin-top:clamp(56px, 9vh, 96px); padding-top:22px; border-top:1px solid var(--rule); font-weight:700; font-size:clamp(26px, 3vw, 40px); line-height:1.08; letter-spacing:-.03em; text-wrap:balance; }
+.doc h4{ margin-top:40px; font-weight:700; font-size:clamp(18px, 1.5vw, 21px); line-height:1.3; letter-spacing:-.014em; }
 .doc p, .doc li, .doc td, .doc th{ font-size:clamp(16px, 1.2vw, 18px); line-height:1.6; letter-spacing:-.006em; text-wrap:pretty; }
 .doc > * + *, .doc .card > * + *{ margin-top:14px; }
 .doc h1 + *{ margin-top:22px; }
@@ -79,7 +81,7 @@ body{
 .doc b.key{ font-weight:600; }
 .doc a{ color:inherit; text-underline-offset:3px; }
 .doc s{ color:var(--ink-faint); }
-.doc s.lore{ font-family:"LORE Cyrillic", Inter, sans-serif; font-size:1.05em; color:#fff; text-decoration-color:#fff; }
+.doc s.lore{ font-family:"LORE Cyrillic", Inter, sans-serif; font-size:1.05em; color:var(--ink); text-decoration-color:var(--ink); }
 .doc ul, .doc ol{ padding-left:1.2em; }
 .doc li + li{ margin-top:6px; }
 .doc li::marker{ color:var(--ink-faint); }
@@ -93,12 +95,12 @@ body{
 .doc .draft-inline{ color:var(--ink-soft); font-style:italic; }
 .doc .cards, .doc .groups{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; }
 .doc .card, .doc .groups > div{ padding:20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); box-shadow:inset 0 0 0 1px rgba(255,255,255,.28); }
-.doc .card h3, .doc .card h4{ margin:0; padding:0; border:0; font-size:22px; font-weight:400; letter-spacing:-.02em; }
+.doc .card h3, .doc .card h4{ margin:0; padding:0; border:0; font-size:22px; font-weight:700; letter-spacing:-.02em; }
 .doc .card p, .doc .card li{ font-size:15px; }
 .doc .groups b{ display:block; margin-bottom:6px; }
 .doc .compare{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .doc .compare > div{ padding:16px 18px; border-radius:16px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); font-size:16px; line-height:1.55; }
-.doc .compare .good{ background:var(--ink); color:#ffe9d6; }
+.doc .compare .good{ box-shadow:inset 0 0 0 1.5px var(--ink); }
 .doc .template{ border-top:1px solid var(--rule); }
 .doc .template > div{ padding:10px 0; border-bottom:1px solid var(--rule); font-size:16px; }
 .doc .table-wrap{ overflow-x:auto; }
@@ -110,8 +112,43 @@ body{
 .doc .thanks__title{ font-size:clamp(72px, 12vw, 180px); }
 .doc .thanks__note{ color:var(--ink-soft); }
 
+/* ---------- навигация: точки по числу глав + меню с содержанием ---------- */
+.rail{ position:fixed; z-index:20; left:clamp(14px, 2.4vw, 40px); top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:18px;
+  opacity:0; pointer-events:none; transition:opacity .6s var(--ease-out); }
+.rail.on{ opacity:1; pointer-events:auto; }
+.burger{ width:36px; height:36px; border:0; border-radius:50%; cursor:pointer; color:var(--ink);
+  display:grid; place-items:center; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.35); }
+.burger svg{ width:16px; height:16px; }
+.dots{ list-style:none; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.dot{ position:relative; display:grid; place-items:center; width:20px; height:20px; border:0; background:none; cursor:pointer; }
+.dot::before{ content:""; width:8px; height:8px; border-radius:50%; box-shadow:inset 0 0 0 1.5px var(--ink); transition:transform .4s var(--ease-out), background .3s; }
+.dot.is-active::before{ background:var(--ink); transform:scale(1.3); }
+.dot span{ position:absolute; left:28px; top:50%; transform:translate(-4px,-50%); white-space:nowrap; font:400 13px/1 Inter, sans-serif; color:var(--ink);
+  padding:6px 10px; border-radius:999px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+  opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; }
+.dot:hover span, .dot:focus-visible span{ opacity:1; transform:translate(0,-50%); }
+.toc{ position:fixed; z-index:30; left:clamp(14px, 2.4vw, 40px); top:50%; width:min(360px, calc(100vw - 28px)); max-height:80vh; overflow:auto;
+  transform:translate(-8px,-50%) scale(.98); transform-origin:left center; opacity:0; visibility:hidden;
+  padding:14px; border-radius:22px; background:rgba(255,245,235,.55); -webkit-backdrop-filter:blur(22px) saturate(1.2); backdrop-filter:blur(22px) saturate(1.2);
+  box-shadow:0 20px 60px rgba(40,10,0,.18), inset 0 0 0 1px rgba(255,255,255,.5);
+  transition:opacity .35s var(--ease-out), transform .35s var(--ease-out), visibility 0s .35s; }
+.toc.is-open{ opacity:1; visibility:visible; transform:translate(0,-50%); transition:opacity .35s var(--ease-out), transform .35s var(--ease-out); }
+.toc ol{ list-style:none; }
+.toc button{ display:flex; gap:12px; align-items:baseline; width:100%; padding:9px 10px; border:0; border-radius:12px; background:none; cursor:pointer; text-align:left;
+  font:400 16px/1.3 Inter, sans-serif; color:var(--ink); }
+.toc button:hover{ background:rgba(255,255,255,.4); }
+.toc button.is-active{ font-weight:700; }
+.toc small{ font-size:12px; min-width:20px; }
+
 @media (max-width: 760px){
-  .chapter{ margin:0 auto; padding-top:12vh; }
+  .rail{ left:auto; right:6px; gap:12px; }
+  .burger{ width:30px; height:30px; }
+  .dot{ width:16px; height:16px; }
+  .dot span{ display:none; }
+  .toc{ left:auto; right:14px; transform-origin:right center; }
+  .chapter{ width:calc(100% - 52px); margin:0 0 0 16px; padding-top:12vh; }
   .doc .compare{ grid-template-columns:1fr; }
 }
 @media (prefers-reduced-motion: reduce){
@@ -128,6 +165,14 @@ body{
 </header>
 
 <main class="content" id="content"></main>
+
+<nav class="rail" id="rail" aria-label="Главы">
+  <button class="burger" id="burger" type="button" aria-label="Содержание" aria-expanded="false">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+  </button>
+  <ol class="dots" id="dots"></ol>
+</nav>
+<div class="toc" id="toc" role="dialog" aria-label="Содержание"><ol id="tocList"></ol></div>
 
 <script src="../vendor/marked.min.js"></script>
 <script src="../vendor/three.min.js"></script>
@@ -172,26 +217,114 @@ body{
     });
   }
 
-  // ---------- прокрутка = время анимации бублика ----------
-  // первый экран (крупный план) отдаём первым 1.6 секундам ролика — бублик отъезжает,
-  // пока уходит логотип; остальной текст проходит по всей остальной анимации
-  var HERO_T = 1.6;
-  var ready = false, progress = 0, timeAt = 0, seekAt = 0, last = performance.now();
+  // ---------- навигация: точки + содержание ----------
+  var rail = document.getElementById("rail"), dots = document.getElementById("dots");
+  var toc = document.getElementById("toc"), tocList = document.getElementById("tocList"), burger = document.getElementById("burger");
+  var sections = [], active = -1;
+  function buildNav(){
+    sections = [].slice.call(content.querySelectorAll(".chapter"));
+    sections.forEach(function(sec, i){
+      var h1 = sec.querySelector("h1"), title = h1 ? h1.textContent.trim() : "Глава " + (i + 1);
+      var li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button"; b.className = "dot"; b.setAttribute("aria-label", title);
+      b.innerHTML = "<span>" + esc(title) + "</span>";
+      b.addEventListener("click", function(){ go(i); });
+      li.appendChild(b); dots.appendChild(li);
+      var tl = document.createElement("li"), tb = document.createElement("button");
+      tb.type = "button";
+      tb.innerHTML = "<small>" + pad(i + 1) + "</small><span>" + esc(title) + "</span>";
+      tb.addEventListener("click", function(){ closeToc(); go(i); });
+      tl.appendChild(tb); tocList.appendChild(tl);
+    });
+  }
+  function go(i){ window.scrollTo({ top: sections[i].offsetTop + 2, behavior: "smooth" }); }
+  function openToc(){ toc.classList.add("is-open"); burger.setAttribute("aria-expanded", "true"); }
+  function closeToc(){ toc.classList.remove("is-open"); burger.setAttribute("aria-expanded", "false"); }
+  burger.addEventListener("click", function(e){ e.stopPropagation(); toc.classList.contains("is-open") ? closeToc() : openToc(); });
+  document.addEventListener("click", function(e){ if (!toc.contains(e.target)) closeToc(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeToc(); });
+  function markNav(y){
+    rail.classList.toggle("on", y > innerHeight * 0.6);
+    var cur = 0;
+    for (var i = 0; i < sections.length; i++) if (sections[i].offsetTop <= y + innerHeight * 0.4) cur = i;
+    if (cur === active) return;
+    active = cur;
+    [].forEach.call(dots.children, function(li, k){ li.firstChild.classList.toggle("is-active", k === cur); });
+    [].forEach.call(tocList.children, function(li, k){ li.firstChild.classList.toggle("is-active", k === cur); });
+  }
+
+  // ---------- палитры: каждые две главы — новый цвет фона и бублика ----------
+  var PALETTES = [
+    { bg: ["#FDBC57", "#FF8A4A", "#FF7645", "rgba(232,84,40,.55)"], base: "#FF6A2C", spots: "#FFD3A1", inner: "#FFB88A", bounce: "#C8502A" },  // оранжевый
+    { bg: ["#EDE6FF", "#BFAEFF", "#9C86FF", "rgba(110,80,240,.45)"], base: "#6B55FF", spots: "#EEE9FF", inner: "#CFC4FF", bounce: "#6A52E0" },  // лиловый
+    { bg: ["#F4FFC4", "#D4F77A", "#B4EA45", "rgba(120,190,20,.45)"], base: "#F5F6F2", spots: "#4F4BFF", inner: "#E3E6FF", bounce: "#8CC23A" },  // лайм
+    { bg: ["#E2F4FF", "#A9D8FF", "#7DBDFF", "rgba(40,120,240,.40)"], base: "#2E6BFF", spots: "#CBE8FF", inner: "#B5D2FF", bounce: "#3D7EE6" },  // голубой
+    { bg: ["#FFE3EC", "#FFB3CB", "#FF8DB0", "rgba(240,60,120,.40)"], base: "#FF4F87", spots: "#FFE6EE", inner: "#FFC0D3", bounce: "#E2507F" },  // розовый
+    { bg: ["#FDBC57", "#FF8A4A", "#FF7645", "rgba(232,84,40,.55)"], base: "#FF6A2C", spots: "#FFD3A1", inner: "#FFB88A", bounce: "#C8502A" }   // снова оранжевый — финал
+  ];
+  // откуда бублик въезжает в каждом новом цикле (мировые единицы): слева, снизу, справа, сверху, слева
+  var ENTRY = [[0, 0, 0], [-7, 0.5, 0], [0, -5.5, 0], [7, -0.5, 0], [0, 5.5, 0], [-7, 0, 0]];
+  function rgba(c){
+    if (c[0] === "#") return [parseInt(c.substr(1, 2), 16), parseInt(c.substr(3, 2), 16), parseInt(c.substr(5, 2), 16), 1];
+    var m = c.match(/[\d.]+/g); return [+m[0], +m[1], +m[2], +m[3]];
+  }
+  function mix(a, b, k){ var x = rgba(a), y = rgba(b); return [0, 1, 2, 3].map(function(i){ return x[i] + (y[i] - x[i]) * k; }); }
+  function css(v){ return "rgba(" + Math.round(v[0]) + "," + Math.round(v[1]) + "," + Math.round(v[2]) + "," + v[3].toFixed(3) + ")"; }
+  function hex(v){ return "#" + [0, 1, 2].map(function(i){ return ("0" + Math.round(v[i]).toString(16)).slice(-2); }).join(""); }
+  var stage = document.querySelector(".stage"), theme = document.querySelector('meta[name="theme-color"]'), lastPal = "";
+  function applyPalette(k, blend){
+    var a = PALETTES[k], b = PALETTES[Math.min(k + 1, PALETTES.length - 1)];
+    var key = k + ":" + blend.toFixed(3);
+    if (key === lastPal) return;
+    lastPal = key;
+    for (var i = 0; i < 4; i++) stage.style.setProperty("--c" + (i + 1), css(mix(a.bg[i], b.bg[i], blend)));
+    theme.setAttribute("content", hex(mix(a.bg[2], b.bg[2], blend)));
+    DONUT.colors({ base: hex(mix(a.base, b.base, blend)), spots: hex(mix(a.spots, b.spots, blend)), inner: hex(mix(a.inner, b.inner, blend)), bounce: hex(mix(a.bounce, b.bounce, blend)) });
+  }
+
+  // ---------- прокрутка = циклы анимации бублика ----------
+  // Одна полная анимация (целый → трещины → разлёт → снова целый) — на каждые две главы.
+  // Первый цикл начинается с крупного плана под логотипом; следующие — сразу с бублика целиком,
+  // который въезжает с новой стороны, пока меняется цвет.
+  var PER = 2, HERO_T = 1.6, T0 = 1.4;
+  var CYCLES = Math.ceil(FILES.length / PER);
+  var ready = false, progress = 0, gAt = 0, gSeek = 0, last = performance.now();
   function readScroll(){
     var max = document.documentElement.scrollHeight - innerHeight, y = pageYOffset, h = innerHeight;
     progress = max > 0 ? clamp(y / max, 0, 1) : 0;
-    timeAt = y < h ? (y / h) * HERO_T : HERO_T + clamp((y - h) / Math.max(1, max - h), 0, 1) * (DURATION - HERO_T);
+    if (!sections.length){ gAt = clamp(y / h, 0, 1) * HERO_T / DURATION; return; }
+    // границы циклов — начала глав 1, 3, 5…; последняя — конец страницы
+    var starts = [0];
+    for (var k = 1; k < CYCLES; k++) starts.push(sections[k * PER].offsetTop);
+    starts.push(Math.max(max, starts[starts.length - 1] + 1));
+    var c = 0; k = 0;
+    while (k < CYCLES - 1 && y >= starts[k + 1]) k++;
+    var a = starts[k], b = starts[k + 1];
+    if (k === 0){
+      var hf = HERO_T / DURATION;
+      c = y < h ? (y / h) * hf : hf + clamp((y - h) / Math.max(1, b - h), 0, 1) * (1 - hf);
+    } else c = clamp((y - a) / Math.max(1, b - a), 0, 1);
+    gAt = k + c;
+    markNav(y);
   }
   function frame(now){
     var dt = Math.min(0.1, (now - last) / 1000); last = now;
     if (ready){
-      seekAt += (timeAt - seekAt) * (1 - Math.exp(-dt * 7));   // мягко догоняем, без рывков
+      gSeek += (gAt - gSeek) * (1 - Math.exp(-dt * 7));   // мягко догоняем, без рывков
+      var k = Math.min(CYCLES - 1, Math.floor(gSeek)), c = clamp(gSeek - k, 0, 1);
+      if (gSeek >= CYCLES){ k = CYCLES - 1; c = 1; }
+      var t = k === 0 ? c * DURATION : T0 + c * (DURATION - T0);
+      // въезд с новой стороны и уход в сторону, откуда приедет следующий
+      var e = ENTRY[k], n = k < CYCLES - 1 ? ENTRY[k + 1] : [0, 0, 0];
+      var inK = 1 - ramp(c, 0, 0.12), outK = ramp(c, 0.9, 1);
+      DONUT.place(e[0] * inK - n[0] * outK, e[1] * inK - n[1] * outK, 0);
+      applyPalette(k, k < CYCLES - 1 ? ramp(c, 0.86, 1) : 0);
       // после первого экрана бублик отходит вправо и освобождает место тексту
       var past = ramp(pageYOffset / innerHeight, 0.3, 1);
       var wide = innerWidth > 900;
-      DONUT.shift(wide ? 0.2 * past * (1 - 0.7 * ramp(progress, 0.94, 1)) : 0);
+      DONUT.shift(wide ? 0.2 * past * (1 - 0.7 * ramp(progress, 0.97, 1)) : 0);
       gl.style.opacity = wide ? "" : String(1 - 0.55 * past);
-      DONUT.render(seekAt);
+      DONUT.render(t);
     }
     requestAnimationFrame(frame);
   }
@@ -206,7 +339,7 @@ body{
 
   Promise.all(FILES.map(function(f){
     return fetch(f).then(function(r){ return r.ok ? r.text() : ""; }).catch(function(){ return ""; });
-  })).then(function(md){ render(md); readScroll(); });
+  })).then(function(md){ render(md); buildNav(); readScroll(); gSeek = gAt; });
 
   readScroll();
   requestAnimationFrame(frame);
