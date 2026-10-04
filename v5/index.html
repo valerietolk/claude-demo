@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Claude: ликбез</title>
+<meta name="description" content="Презентация о Claude для дизайнеров">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://d2ol7oe51mr4n9.cloudfront.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fg:#0d0c0b;
+  --fg-soft:rgba(13,12,11,.64);
+  --fg-faint:rgba(13,12,11,.42);
+  --shade:#f2f0ec;
+  --rule:rgba(13,12,11,.16);
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --pill-bg:#0a0908;
+  --pill-fg:#ffffff;
+}
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+[hidden]{ display:none !important; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  background:var(--shade);
+  color:var(--fg);
+  font-family:'Inter Tight','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+button{ font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+body.sheet-open{ overflow:hidden; }
+
+/* ---------- фон: видео, которое прокручивает скролл ---------- */
+.stage{ position:fixed; inset:0; z-index:0; overflow:hidden; background:var(--shade); }
+.stage video{
+  position:absolute; top:50%; left:50%; width:100%; height:100%;
+  transform:translate(-50%,-50%) scale(1.02);
+  object-fit:cover; filter:contrast(1.02); will-change:transform;
+}
+/* светлая вуаль: видео очень светлое, у шапки и подвала она плотнее */
+.veil{
+  position:absolute; inset:0; pointer-events:none;
+  background:
+    linear-gradient(to bottom, rgba(242,240,236,.62) 0%, rgba(242,240,236,.12) 22%, rgba(242,240,236,.12) 78%, rgba(242,240,236,.66) 100%),
+    radial-gradient(100% 80% at 50% 48%, rgba(242,240,236,0) 0%, rgba(242,240,236,.34) 100%),
+    rgba(242,240,236,.20);
+}
+.grain{
+  position:absolute; inset:-50%; opacity:.13; mix-blend-mode:multiply; pointer-events:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='.5'/></svg>");
+}
+
+/* ---------- шапка, подвал, полоска прогресса ---------- */
+.chrome{
+  position:fixed; left:0; right:0; top:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:max(14px, calc(env(safe-area-inset-top, 0px) + 12px)) clamp(16px, 3.4vw, 44px) 14px;
+  background:linear-gradient(to bottom, rgba(242,240,236,.94) 0%, rgba(242,240,236,.78) 72%, rgba(242,240,236,0) 100%);
+}
+.mark{
+  display:flex; align-items:center; gap:9px; font-size:15px; letter-spacing:-.012em;
+  color:var(--fg); min-width:0; flex-shrink:1;
+}
+.mark-star{ opacity:.85; }
+.nav{ display:flex; align-items:center; gap:clamp(14px, 2.4vw, 32px); flex-shrink:0; }
+.nav .link{
+  color:var(--fg); font-size:14.5px; letter-spacing:-.008em; opacity:.88;
+  transition:opacity .3s var(--ease);
+}
+.nav .link:hover{ opacity:1; }
+.count{ font-size:13px; letter-spacing:.02em; color:var(--fg-faint); font-variant-numeric:tabular-nums; }
+
+.pill{
+  display:inline-flex; align-items:center; justify-content:center; height:40px;
+  padding:0 21px; border-radius:999px; background:var(--pill-bg); color:var(--pill-fg);
+  font-size:14.5px; font-weight:500; letter-spacing:-.008em; text-decoration:none;
+  white-space:nowrap; opacity:1; border:1px solid rgba(10,9,8,.12);
+  box-shadow:0 1px 0 rgba(255,255,255,.10) inset; -webkit-text-fill-color:var(--pill-fg);
+  transition:transform .4s var(--ease), background .3s var(--ease), color .3s var(--ease);
+}
+.nav .pill{ color:#fff; -webkit-text-fill-color:#fff; }
+.pill:hover, .pill:focus-visible{ transform:translateY(-2px); background:#000; color:#fff; -webkit-text-fill-color:#fff; }
+.pill:focus-visible{ outline:2px solid var(--fg); outline-offset:2px; }
+.pill--ghost{ background:transparent; color:var(--fg); -webkit-text-fill-color:var(--fg); border-color:var(--rule); box-shadow:none; }
+.pill--ghost:hover, .pill--ghost:focus-visible{ background:var(--fg); }
+
+.foot{
+  position:fixed; bottom:0; left:0; right:0; z-index:40; display:flex; justify-content:center;
+  padding:14px clamp(16px, 4vw, 24px) max(16px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+  font-size:12px; line-height:1.45; letter-spacing:.02em; color:var(--fg-faint);
+  text-align:center; pointer-events:none;
+  background:linear-gradient(to top, rgba(242,240,236,.92) 0%, rgba(242,240,236,.72) 72%, rgba(242,240,236,0) 100%);
+}
+.meter{
+  position:fixed; top:0; left:0; z-index:50; height:2px; width:100%;
+  transform:scaleX(0); transform-origin:0 50%; background:var(--fg); opacity:.55;
+}
+
+/* ---------- панели: вступление и 12 глав ---------- */
+.panels{ position:fixed; inset:0; z-index:20; pointer-events:none; }
+.panel{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center;
+  padding:max(104px, calc(env(safe-area-inset-top, 0px) + 88px)) clamp(20px, 5vw, 60px) max(96px, calc(env(safe-area-inset-bottom, 0px) + 80px));
+  opacity:0; will-change:opacity,transform;
+}
+.eyebrow{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+  gap:6px 12px; font-size:12.5px; letter-spacing:.045em; color:var(--fg-soft);
+  margin-bottom:clamp(16px,2vw,22px); max-width:min(46ch, 100%); text-align:center;
+}
+.panel h1{
+  font-weight:400; font-size:clamp(34px, 7.1vw, 104px); line-height:.98;
+  letter-spacing:-.036em; max-width:15ch; text-wrap:balance;
+}
+.sub{
+  margin-top:clamp(18px,2.2vw,28px); font-size:clamp(15px,1.28vw,19px);
+  line-height:1.5; letter-spacing:-.008em; color:var(--fg-soft);
+  max-width:min(46ch, 100%); text-wrap:pretty;
+}
+.cta{
+  margin-top:clamp(28px,3.4vw,44px); pointer-events:auto; width:100%;
+  display:flex; justify-content:center; flex-wrap:wrap; gap:10px;
+}
+/* .cta sets pointer-events:auto, which would override the panel's none — so gate it */
+.panel:not(.live) .cta{ pointer-events:none; }
+.cta .pill{ height:48px; padding:0 27px; font-size:15px; max-width:min(100%, 320px); }
+
+/* ---------- прелоадер ---------- */
+.boot{
+  position:fixed; inset:0; z-index:90; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:16px; background:var(--shade);
+  transition:opacity .7s var(--ease), visibility .7s;
+}
+.boot.done{ opacity:0; visibility:hidden; }
+.boot p{ font-size:12.5px; letter-spacing:.05em; color:var(--fg-faint); }
+.bar{ width:150px; height:1px; background:var(--rule); overflow:hidden; }
+.bar i{ display:block; height:100%; width:100%; background:var(--fg); transform:scaleX(0); transform-origin:0 50%; }
+
+/* высоту странице даёт только лента; её длина зависит от числа панелей */
+.track{ position:relative; z-index:1; height:calc(var(--n, 3) * 180vh); min-height:3200px; }
+
+/* ---------- лист с главой ---------- */
+.sheet{
+  position:fixed; inset:0; z-index:60;
+  background:var(--shade);
+  overflow-y:auto; overscroll-behavior:contain;
+  transform:translateY(102%);
+  transition:transform .9s var(--ease-out), visibility 0s .9s;
+  visibility:hidden;
+}
+.sheet.is-open{ transform:none; visibility:visible; transition:transform .9s var(--ease-out), visibility 0s; }
+.sheet__bar{
+  position:sticky; top:0; z-index:2;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:max(14px, calc(env(safe-area-inset-top, 0px) + 12px)) clamp(16px, 3.4vw, 44px) 14px;
+  background:linear-gradient(to bottom, rgba(242,240,236,.96) 0%, rgba(242,240,236,.86) 72%, rgba(242,240,236,0) 100%);
+}
+.sheet__where{ font-size:13px; letter-spacing:.02em; color:var(--fg-soft); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sheet__body{
+  width:min(760px, 100% - 2 * clamp(20px, 5vw, 60px)); margin:0 auto;
+  padding:clamp(24px, 6vh, 64px) 0 clamp(64px, 12vh, 120px);
+  transition:opacity .35s var(--ease);
+}
+.sheet__body.is-swapping{ opacity:0; }
+
+/* типографика листа — в духе промпта: тесный гротеск, много воздуха */
+.doc .eyebrow{ justify-content:flex-start; text-align:left; margin-bottom:18px; }
+.doc h1{ font-weight:400; font-size:clamp(40px, 6.4vw, 88px); line-height:.98; letter-spacing:-.036em; text-wrap:balance; }
+.doc h2{ margin-top:22px; font-weight:400; font-size:clamp(19px, 1.7vw, 24px); line-height:1.35; letter-spacing:-.012em; color:var(--fg-soft); text-wrap:balance; }
+.doc h3{ margin-top:clamp(56px, 9vh, 96px); padding-top:22px; border-top:1px solid var(--rule); font-weight:400; font-size:clamp(26px, 3vw, 40px); line-height:1.08; letter-spacing:-.028em; text-wrap:balance; }
+.doc h4{ margin-top:40px; font-weight:500; font-size:clamp(18px, 1.5vw, 21px); line-height:1.3; letter-spacing:-.014em; }
+.doc p, .doc li, .doc td, .doc th{ font-size:clamp(16px, 1.2vw, 18px); line-height:1.6; letter-spacing:-.006em; text-wrap:pretty; }
+.doc > * + *, .doc .card > * + *{ margin-top:14px; }
+.doc h1 + *{ margin-top:22px; }
+.doc h3 + *, .doc h4 + *{ margin-top:12px; }
+.doc strong, .doc b{ font-weight:500; }
+.doc a{ color:inherit; text-underline-offset:3px; }
+.doc s{ color:var(--fg-faint); }
+.doc ul, .doc ol{ padding-left:1.2em; }
+.doc li + li{ margin-top:6px; }
+.doc li::marker{ color:var(--fg-faint); }
+.doc blockquote{
+  position:relative; padding:16px 20px; border-radius:16px;
+  background:rgba(13,12,11,.05); box-shadow:inset 0 0 0 1px var(--rule);
+}
+.doc blockquote p{ font-size:clamp(15px, 1.1vw, 17px); }
+.doc .tag{ display:inline-block; margin-left:6px; padding:0 9px; border-radius:999px; box-shadow:inset 0 0 0 1px var(--rule); font-size:12px; line-height:1.8; color:var(--fg-soft); white-space:nowrap; vertical-align:2px; }
+.doc .fact, .doc .warn, .doc .note{ padding-left:16px; border-left:2px solid var(--fg); }
+.doc .note, .doc .when-not, .doc .aside{ color:var(--fg-soft); }
+.doc aside.draft, .doc p.draft{ display:block; padding:12px 16px; border-radius:12px; border:1px dashed var(--fg-faint); color:var(--fg-soft); font-size:14px; font-style:italic; }
+.doc aside.draft::before{ content:"черновик · "; font-style:normal; font-weight:500; }
+.doc .draft-inline{ color:var(--fg-soft); font-style:italic; }
+.doc .cards, .doc .groups{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:16px; overflow:hidden; }
+.doc .card, .doc .groups > div{ background:var(--shade); padding:20px; }
+.doc .card h3, .doc .card h4{ margin:0; padding:0; border:0; font-size:22px; font-weight:500; letter-spacing:-.02em; }
+.doc .card p, .doc .card li{ font-size:15px; }
+.doc .groups b{ display:block; margin-bottom:6px; }
+.doc .compare{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.doc .compare > div{ padding:16px 18px; border-radius:14px; box-shadow:inset 0 0 0 1px var(--rule); font-size:16px; line-height:1.55; }
+.doc .compare .good{ background:var(--fg); color:var(--shade); box-shadow:none; }
+.doc .template{ border-top:1px solid var(--rule); }
+.doc .template > div{ padding:10px 0; border-bottom:1px solid var(--rule); font-size:16px; }
+.doc .table-wrap{ overflow-x:auto; }
+.doc table{ width:100%; border-collapse:collapse; }
+.doc th, .doc td{ padding:12px 16px 12px 0; text-align:left; vertical-align:top; border-top:1px solid var(--rule); }
+.doc th{ border-top:0; font-size:12.5px; letter-spacing:.045em; color:var(--fg-soft); font-weight:400; }
+.doc .thanks{ min-height:50vh; display:grid; place-content:center; text-align:center; }
+.doc .thanks__title{ font-size:clamp(72px, 12vw, 180px); }
+.doc .thanks__note{ color:var(--fg-soft); }
+
+.next{
+  display:block; width:100%; text-align:left;
+  margin-top:clamp(64px, 12vh, 120px); padding-top:22px; border-top:1px solid var(--rule);
+}
+.next small{ display:block; font-size:12.5px; letter-spacing:.045em; color:var(--fg-soft); }
+.next strong{ display:block; margin-top:10px; font-weight:400; font-size:clamp(34px, 5vw, 64px); line-height:1; letter-spacing:-.036em; transition:transform .5s var(--ease); }
+.next:hover strong{ transform:translateX(10px); }
+
+/* ---------- меню-содержание ---------- */
+.menu{
+  position:fixed; inset:0; z-index:70;
+  background:rgba(242,240,236,.97);
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  overflow-y:auto;
+  opacity:0; visibility:hidden;
+  transition:opacity .45s var(--ease), visibility 0s .45s;
+}
+.menu.is-open{ opacity:1; visibility:visible; transition:opacity .45s var(--ease), visibility 0s; }
+/* шапка остаётся над меню — в ней кнопка «Закрыть» */
+body.menu-open .chrome{ z-index:80; background:none; }
+.menu__inner{ width:min(980px, 100% - 2 * clamp(20px, 5vw, 60px)); margin:0 auto; padding:max(96px, calc(env(safe-area-inset-top, 0px) + 84px)) 0 64px; }
+.menu__list{ list-style:none; border-top:1px solid var(--rule); }
+.menu__list li{ border-bottom:1px solid var(--rule); }
+.menu__link{
+  display:flex; align-items:baseline; gap:clamp(14px, 3vw, 32px); width:100%; text-align:left;
+  padding:clamp(12px, 1.8vh, 18px) 0;
+  transform:translateY(12px); opacity:0;
+  transition:transform .6s var(--ease-out), opacity .6s var(--ease), color .3s var(--ease);
+}
+.menu.is-open .menu__link{ transform:none; opacity:1; transition-delay:calc(var(--i) * 28ms), calc(var(--i) * 28ms), 0s; }
+.menu__num{ flex:none; width:2.2em; font-size:12.5px; letter-spacing:.045em; color:var(--fg-faint); font-variant-numeric:tabular-nums; }
+.menu__title{ font-size:clamp(26px, 3.6vw, 48px); line-height:1.02; letter-spacing:-.032em; }
+.menu__list:hover .menu__link{ color:var(--fg-faint); }
+.menu__list .menu__link:hover, .menu__link:focus-visible{ color:var(--fg); }
+.menu__link.is-current .menu__num{ color:var(--fg); }
+
+/* ---------- адаптив ---------- */
+@media (max-width:900px){
+  .veil{
+    background:
+      linear-gradient(to bottom, rgba(242,240,236,.72) 0%, rgba(242,240,236,.18) 24%, rgba(242,240,236,.18) 76%, rgba(242,240,236,.74) 100%),
+      radial-gradient(100% 80% at 50% 48%, rgba(242,240,236,0) 0%, rgba(242,240,236,.40) 100%),
+      rgba(242,240,236,.24);
+  }
+}
+@media (max-width:720px){
+  .nav .link, .count{ display:none; }
+  .mark{ font-size:14px; }
+  .nav .pill{ height:38px; padding:0 16px; font-size:13.5px; }
+  .panel h1{ max-width:12ch; font-size:clamp(30px, 9.8vw, 52px); }
+  .sub{ font-size:15px; max-width:34ch; }
+  .panel{ padding:max(92px, calc(env(safe-area-inset-top, 0px) + 76px)) 18px max(88px, calc(env(safe-area-inset-bottom, 0px) + 72px)); }
+  .foot{ font-size:11px; }
+  .doc .compare{ grid-template-columns:1fr; }
+}
+@media (max-width:420px){
+  .mark-star{ display:none; }
+  .nav .pill{ height:36px; padding:0 14px; font-size:13px; }
+  .panel h1{ max-width:11ch; font-size:clamp(28px, 10.5vw, 40px); }
+  .eyebrow{ font-size:11px; letter-spacing:.04em; max-width:28ch; }
+  .cta .pill{ width:100%; max-width:280px; height:44px; padding:0 20px; font-size:14px; }
+}
+@media (max-height:520px) and (orientation:landscape){
+  .panel{ padding:max(72px, calc(env(safe-area-inset-top, 0px) + 56px)) 24px max(64px, calc(env(safe-area-inset-bottom, 0px) + 48px)); }
+  .panel h1{ font-size:clamp(28px, 8vh, 44px); }
+  .sub{ margin-top:12px; font-size:14px; }
+  .cta{ margin-top:16px; }
+}
+@media (prefers-reduced-motion:reduce){
+  .sheet, .menu, .menu__link, .sheet__body{ transition-duration:.01ms !important; transition-delay:0s !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="boot" id="boot">
+  <div class="bar"><i id="bootBar"></i></div>
+  <p id="bootPct">ЗАГРУЗКА 0%</p>
+</div>
+
+<div class="stage">
+  <video id="clip" muted playsinline preload="auto" disablepictureinpicture></video>
+  <div class="veil"></div>
+  <div class="grain"></div>
+</div>
+
+<i class="meter" id="meter"></i>
+
+<header class="chrome">
+  <div class="mark"><span class="mark-star" aria-hidden="true">&#10037;</span>&nbsp;Claude · ликбез</div>
+  <nav class="nav">
+    <span class="count" id="count"></span>
+    <button class="link" type="button" data-read="0">Читать</button>
+    <button class="pill" type="button" data-menu>Содержание</button>
+  </nav>
+</header>
+
+<!-- панели собираются из глав; первая — вступление -->
+<main class="panels" id="panels">
+  <section class="panel" data-panel>
+    <p class="eyebrow">ликбез <span>&middot;</span> 12 глав</p>
+    <h1>Claude - AI у которого появились руки</h1>
+    <p class="sub">Claude — ИИ от Anthropic, который не просто отвечает в чате, а умеет действовать: ходить по сайтам, работать с файлами, взаимодействовать с Figma, писать код, создавать прототипы и запускать задачи самостоятельно.</p>
+    <div class="cta"><button class="pill" type="button" data-read="0">Читать с начала</button><button class="pill pill--ghost" type="button" data-menu>Содержание</button></div>
+  </section>
+</main>
+
+<footer class="foot" id="foot">листай, чтобы пройти по главам</footer>
+
+<div class="track" id="track"></div>
+
+<!-- лист с полным текстом главы -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Глава">
+  <div class="sheet__bar">
+    <span class="sheet__where" id="sheetWhere"></span>
+    <button class="pill" type="button" id="sheetClose">Закрыть</button>
+  </div>
+  <article class="sheet__body doc" id="sheetBody"></article>
+</div>
+
+<!-- меню -->
+<div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Содержание">
+  <div class="menu__inner">
+    <ol class="menu__list" id="menuList"></ol>
+  </div>
+</div>
+
+<script src="../vendor/marked.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // Главы — те же файлы, что и в основной версии. Текст не меняем.
+  var SLIDES = [
+    { id:"likbez",      title:"ликбез",                               file:"../content/01-likbez.md" },
+    { id:"where",       title:"chat/chrome/design/code",              file:"../content/02-where.md" },
+    { id:"chrome",      title:"Claude in Chrome",                     file:"../content/03-chrome.md" },
+    { id:"design",      title:"Claude Design",                        file:"../content/04-design.md" },
+    { id:"code",        title:"Claude Code",                          file:"../content/05-code.md" },
+    { id:"connectors",  title:"Connectors",                           file:"../content/06-connectors.md" },
+    { id:"skills",      title:"Skills",                               file:"../content/07-skills.md" },
+    { id:"limits",      title:"Особенности, лимиты и промпт-гигиена", file:"../content/08-limits.md" },
+    { id:"task",        title:"Ставим задачу эффективно",             file:"../content/09-task.md" },
+    { id:"inspiration", title:"Инспирейшн",                           file:"../content/10-inspiration.md" },
+    { id:"personal",    title:"От себя",                              file:"../content/11-personal.md" },
+    { id:"thanks",      title:"Спасибо",                              file:"../content/12-thanks.md" }
+  ];
+
+  // 1920×1080, 10.04s, 241 frames, all-intra: каждый кадр — ключевой,
+  // поэтому прокрутка может мгновенно встать на любой кадр.
+  var VIDEO_URL = "https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/45567745-d826-44a2-a5ce-7ef670944e60.mp4";
+
+  var $ = function(id){ return document.getElementById(id); };
+  var clip = $("clip"), boot = $("boot"), bootBar = $("bootBar"), bootPct = $("bootPct"), meter = $("meter");
+  var panelsEl = $("panels"), track = $("track"), foot = $("foot"), countEl = $("count");
+  var sheet = $("sheet"), sheetBody = $("sheetBody"), sheetWhere = $("sheetWhere");
+  var menu = $("menu"), menuList = $("menuList");
+  var pad = function(n){ return String(n).padStart(2, "0"); };
+  var md = [];
+
+  function clamp(v, a, b){ return Math.min(b, Math.max(a, v)); }
+  function smooth(t){ return t * t * (3 - 2 * t); }
+  function ramp(p, a, b){ if (b <= a) return p >= b ? 1 : 0; return smooth(clamp((p - a) / (b - a), 0, 1)); }
+  function esc(s){ return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  // ---------- главы: заголовок, подзаголовок, тело ----------
+  function parse(i){
+    var tpl = document.createElement("template");
+    tpl.innerHTML = marked.parse(md[i] || "");
+    var kids = [].slice.call(tpl.content.children);
+    var h1 = kids.filter(function(n){ return n.tagName === "H1"; })[0];
+    var h2 = h1 && h1.nextElementSibling && h1.nextElementSibling.tagName === "H2" ? h1.nextElementSibling : null;
+    return { tpl: tpl, h1: h1, h2: h2 };
+  }
+
+  // ---------- панели: вступление + по одной на главу ----------
+  var panels = [], CUES = [];
+  function buildPanels(){
+    SLIDES.forEach(function(s, i){
+      var p = parse(i);
+      var sec = document.createElement("section");
+      sec.className = "panel";
+      sec.setAttribute("data-panel", "");
+      var title = p.h1 ? p.h1.textContent : s.title;
+      sec.innerHTML =
+        '<p class="eyebrow">Глава ' + pad(i + 1) + ' <span>&middot;</span> ' + pad(SLIDES.length) + '</p>' +
+        '<h1>' + esc(title) + '</h1>' +
+        (p.h2 ? '<p class="sub">' + p.h2.innerHTML + '</p>' : '') +
+        '<div class="cta"><button class="pill" type="button" data-read="' + i + '">Читать главу</button></div>';
+      panelsEl.appendChild(sec);
+    });
+    panels = [].slice.call(document.querySelectorAll("[data-panel]"));
+    // Каждая панель владеет своим отрезком прокрутки: появилась → видна → ушла.
+    // Между отрезками — пустые зоны, где видно только видео: две панели не читаются одновременно.
+    var n = panels.length, w = 1 / n;
+    CUES = panels.map(function(_, i){
+      var a = i * w;
+      if (i === 0) return [0, 0, a + w * 0.55, a + w * 0.75];
+      if (i === n - 1) return [a + w * 0.15, a + w * 0.4, 1.1, 1.2];
+      return [a + w * 0.15, a + w * 0.4, a + w * 0.6, a + w * 0.85];
+    });
+    track.style.setProperty("--n", n);
+  }
+
+  // ---------- прокрутка видео ----------
+  var DRIFT = 22;
+  var progress = 0, seekTo = 0, seekAt = 0, duration = 0, ready = false, visible = 0;
+
+  function readScroll(){
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    progress = max > 0 ? clamp(window.pageYOffset / max, 0, 1) : 0;
+    if (duration) seekTo = progress * duration;
+  }
+
+  function paint(){
+    meter.style.transform = "scaleX(" + progress + ")";
+    var best = 0, bestO = -1;
+    for (var i = 0; i < panels.length; i++){
+      var el = panels[i], c = CUES[i];
+      var enter = ramp(progress, c[0], c[1]);
+      var leave = ramp(progress, c[2], c[3]);
+      var o = enter * (1 - leave);
+      var y = (1 - enter) * DRIFT - leave * DRIFT;
+      el.style.opacity = o;
+      el.style.transform = "translate3d(0," + y + "px,0)";
+      el.style.pointerEvents = o > 0.6 ? "auto" : "none";
+      el.classList.toggle("live", o > 0.6); // кнопки невидимых панелей не должны ловить клики
+      if (o > bestO){ bestO = o; best = i; }
+    }
+    if (best !== visible){
+      visible = best;
+      countEl.textContent = best > 0 ? pad(best) + " / " + pad(SLIDES.length) : "";
+      foot.textContent = best > 0 ? SLIDES[best - 1].title : "листай, чтобы пройти по главам";
+    }
+  }
+
+  function frame(){
+    if (ready && duration){
+      var gap = seekTo - seekAt;
+      if (Math.abs(gap) > 0.0008){
+        // плавно догоняем цель, а не прыгаем — так прокрутка без рывков
+        seekAt += gap * 0.115;
+        if (clip.readyState >= 2 && !clip.seeking){
+          try { clip.currentTime = seekAt; } catch (e) {}
+        }
+      }
+    }
+    paint();
+    requestAnimationFrame(frame);
+  }
+
+  function setProgress(f){
+    bootBar.style.transform = "scaleX(" + f + ")";
+    bootPct.textContent = "ЗАГРУЗКА " + Math.round(f * 100) + "%";
+  }
+
+  var started = false, textsReady = false, videoReady = false;
+  function start(){
+    videoReady = true;
+    if (started || !textsReady) return;
+    started = true;
+    ready = true;
+    boot.classList.add("done");
+    readScroll();
+    seekAt = seekTo;
+    var i = SLIDES.findIndex(function(s){ return "#" + s.id === location.hash; });
+    if (i >= 0) openSheet(i, true);
+  }
+
+  var attached = false;
+  function attach(src){
+    if (attached) return;
+    attached = true;
+    clip.addEventListener("loadedmetadata", function(){
+      duration = clip.duration || 0;
+      clip.pause();
+      readScroll();
+      seekAt = seekTo;
+      try { clip.currentTime = seekAt; } catch (e) {}
+    });
+    clip.addEventListener("loadeddata", start);
+    clip.addEventListener("canplaythrough", start);
+    clip.addEventListener("error", start);
+    clip.src = src;
+    clip.load();
+    setTimeout(start, 12000);
+  }
+
+  // Ролик грузим целиком в память: перемотка внутри загруженного файла почти мгновенная,
+  // а запросы кусками по сети превращают прокрутку в слайд-шоу.
+  function preload(){
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var bail = setTimeout(function(){
+      if (attached) return;
+      if (ctrl) ctrl.abort();
+      setProgress(1);
+      attach(VIDEO_URL);
+    }, 15000);
+    fetch(VIDEO_URL, ctrl ? { signal: ctrl.signal } : {})
+      .then(function(res){
+        if (!res.ok || !res.body) throw new Error("fetch failed");
+        var total = +res.headers.get("content-length") || 0;
+        var reader = res.body.getReader(), chunks = [], got = 0;
+        return new Promise(function(resolve, reject){
+          (function pump(){
+            reader.read().then(function(r){
+              if (r.done){ resolve(new Blob(chunks, { type: "video/mp4" })); return; }
+              chunks.push(r.value);
+              got += r.value.length;
+              setProgress(total ? got / total : Math.min(got / 11e6, 0.95));
+              pump();
+            }).catch(reject);
+          })();
+        });
+      })
+      .then(function(blob){ clearTimeout(bail); setProgress(1); attach(URL.createObjectURL(blob)); })
+      .catch(function(){ clearTimeout(bail); setProgress(1); attach(VIDEO_URL); });
+  }
+
+  // iOS не рисует кадр видео, которое ни разу не запускали: один раз
+  // запускаем его при первом касании и сразу ставим на паузу.
+  function unlock(){
+    var p = clip.play();
+    if (p && p.then) p.then(function(){ clip.pause(); }).catch(function(){});
+    else clip.pause();
+  }
+  ["touchstart", "pointerdown", "wheel", "keydown"].forEach(function(ev){
+    window.addEventListener(ev, unlock, { once: true, passive: true });
+  });
+
+  // ---------- лист с главой ----------
+  var current = -1;
+  function renderSheet(i){
+    var p = parse(i);
+    var html = '<p class="eyebrow">Глава ' + pad(i + 1) + ' <span>&middot;</span> ' + pad(SLIDES.length) + '</p>';
+    var wrap = document.createElement("div");
+    [].slice.call(p.tpl.content.childNodes).forEach(function(n){ wrap.appendChild(n); });
+    wrap.querySelectorAll("table").forEach(function(t){ var w = document.createElement("div"); w.className = "table-wrap"; t.parentNode.replaceChild(w, t); w.appendChild(t); });
+    wrap.querySelectorAll("a[href^='http']").forEach(function(a){ a.target = "_blank"; a.rel = "noopener"; });
+    html += wrap.innerHTML;
+    if (i < SLIDES.length - 1){
+      html += '<button class="next" type="button" data-read="' + (i + 1) + '"><small>Дальше · глава ' + pad(i + 2) + '</small><strong>' + esc(SLIDES[i + 1].title) + '</strong></button>';
+    }
+    sheetBody.innerHTML = html;
+    sheetWhere.textContent = pad(i + 1) + " · " + SLIDES[i].title;
+  }
+
+  function scrollToPanel(i, behavior){
+    var c = CUES[i];
+    var mid = (c[1] + Math.min(c[2], 1)) / 2;
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo({ top: mid * max, behavior: behavior || "smooth" });
+  }
+
+  function openSheet(i, instant){
+    closeMenu();
+    var swap = sheet.classList.contains("is-open") && current !== i;
+    current = i;
+    // за листом лента тоже переезжает на эту главу — после закрытия ты окажешься на ней
+    scrollToPanel(i + 1, "auto");
+    if (swap){
+      sheetBody.classList.add("is-swapping");
+      setTimeout(function(){ renderSheet(i); sheet.scrollTop = 0; sheetBody.classList.remove("is-swapping"); }, 350);
+    } else {
+      renderSheet(i);
+      sheet.scrollTop = 0;
+      if (instant) sheet.style.transition = "none";
+      sheet.classList.add("is-open");
+      body().classList.add("sheet-open");
+      if (instant) requestAnimationFrame(function(){ sheet.style.transition = ""; });
+    }
+    var hash = "#" + SLIDES[i].id;
+    if (location.hash !== hash) history.replaceState(null, "", hash);
+    markMenu();
+  }
+  function closeSheet(){
+    if (!sheet.classList.contains("is-open")) return;
+    sheet.classList.remove("is-open");
+    body().classList.remove("sheet-open");
+    history.replaceState(null, "", location.pathname);
+  }
+  function body(){ return document.body; }
+  $("sheetClose").addEventListener("click", closeSheet);
+
+  // ---------- меню ----------
+  function buildMenu(){
+    SLIDES.forEach(function(s, i){
+      var li = document.createElement("li");
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "menu__link";
+      b.style.setProperty("--i", i);
+      b.innerHTML = '<span class="menu__num">' + pad(i + 1) + '</span><span class="menu__title">' + esc(s.title) + '</span>';
+      b.addEventListener("click", function(){
+        if (sheet.classList.contains("is-open")) { openSheet(i); return; }
+        closeMenu();
+        scrollToPanel(i + 1);   // лента едет к главе, видео прокручивается вместе с ней
+      });
+      li.appendChild(b);
+      menuList.appendChild(li);
+    });
+  }
+  function markMenu(){
+    [].forEach.call(menuList.children, function(li, i){ li.firstChild.classList.toggle("is-current", i === current); });
+  }
+  function openMenu(){ document.body.classList.add("menu-open"); menu.classList.add("is-open"); document.querySelectorAll("[data-menu]").forEach(function(b){ b.textContent = "Закрыть"; }); }
+  function closeMenu(){ document.body.classList.remove("menu-open"); menu.classList.remove("is-open"); document.querySelectorAll("[data-menu]").forEach(function(b){ b.textContent = "Содержание"; }); }
+
+  document.addEventListener("click", function(e){
+    var r = e.target.closest("[data-read]");
+    if (r){ openSheet(+r.getAttribute("data-read")); return; }
+    if (e.target.closest("[data-menu]")){ menu.classList.contains("is-open") ? closeMenu() : openMenu(); return; }
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape"){ if (menu.classList.contains("is-open")) closeMenu(); else closeSheet(); }
+    if (!sheet.classList.contains("is-open")) return;
+    if (e.key === "ArrowRight" && current < SLIDES.length - 1) openSheet(current + 1);
+    if (e.key === "ArrowLeft" && current > 0) openSheet(current - 1);
+  });
+
+  window.addEventListener("scroll", readScroll, { passive: true });
+  window.addEventListener("resize", readScroll);
+
+  // ---------- загрузка: тексты глав + видео ----------
+  Promise.all(SLIDES.map(function(s, i){
+    return fetch(s.file).then(function(r){ return r.ok ? r.text() : ""; }).catch(function(){ return ""; })
+      .then(function(t){ md[i] = t; });
+  })).then(function(){
+    buildPanels();
+    buildMenu();
+    textsReady = true;
+    readScroll();
+    paint();
+    if (videoReady) { videoReady = false; start(); }
+  });
+
+  readScroll();
+  preload();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
