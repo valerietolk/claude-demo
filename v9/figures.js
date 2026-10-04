@@ -36,7 +36,7 @@
         { c: [[-0.85, -0.55, 0], [0.75, 0.8, -0.1], 0.42, 0.4] },
         { c: [[0.05, 0.1, 0], [1.15, -0.95, 0.35], 0.34, 0.5] }
       ],
-      colors: { a: "#141414", b: "#3A3A3A", c: "#0B0B0B", d: "#F2F2F2" }, spotFreq: 5.2, zone: 0.8, glint: 0.6
+      colors: { a: "#141414", b: "#3A3A3A", c: "#0B0B0B", d: "#FF6A2C" }, spotFreq: 5.2, zone: 0.8, glint: 1
     },
     { // 3. «пушистая»: розовый мех с жёлтыми зонами короткого ворса
       kind: "fur", mesh: "nets", k: 0.42, res: 84,
@@ -48,7 +48,7 @@
         { c: [[0, 0, 0], [-0.55, -1.2, -0.2], 0.55, 0.5] },
         { c: [[0, 0, 0], [0.9, -0.9, 0.45], 0.45, 0.42] }
       ],
-      colors: { a: "#F08A7E", b: "#FFF0EA", c: "#FFD23C", d: "#FFFFFF" }, furLen: 0.22, layers: 28
+      colors: { a: "#F08A7E", b: "#FFF0EA", c: "#FFD23C", d: "#FFFFFF" }, furLen: 0.075, layers: 14
     },
     { // 4. «петля в панцире»: изогнутая трубка из плиток с белыми швами, оранжевый → жёлтый
       kind: "beads", mesh: "nets", k: 0.3, res: 110,
@@ -57,7 +57,7 @@
               [0.45, 0.65, 0.55, 0.5], [-0.45, 0.85, 0.25, 0.52], [-1.0, 0.35, -0.35, 0.5], [-0.35, -0.15, -0.75, 0.46],
               [0.75, 0.35, -0.65, 0.5], [1.35, 1.05, -0.15, 0.55]] }
       ],
-      colors: { a: "#161616", b: "#383838", c: "#0C0C0C", d: "#F2F2F2" }, spotFreq: 4.6, zone: 0.7, glint: 0.5
+      colors: { a: "#161616", b: "#383838", c: "#0C0C0C", d: "#FF6A2C" }, spotFreq: 4.6, zone: 0.7, glint: 1
     },
     { // 5. «кольцо из шаров»: мягкие цветные зоны — сиреневый, оранжевый, белый, жёлтый
       kind: "zones", mesh: "nets", k: 0.32, res: 110,
@@ -85,7 +85,7 @@
         { c: [[0.4, -0.2, 0], [0.75, -1.3, 0.25], 0.42, 0.38] },
         { c: [[-0.2, 0.1, 0], [-0.15, 0.3, 1.15], 0.4, 0.36] }
       ],
-      colors: { a: "#151515", b: "#3C3C3C", c: "#222222", d: "#F2F2F2" }, tip: 1.42
+      colors: { a: "#151515", b: "#3C3C3C", c: "#222222", d: "#FF6A2C" }, tip: 1.42
     },
     { // 7. «облако»: оранжевое со светлыми пятнами — финал
       kind: "beads", mesh: "ray", k: 0.45,
@@ -328,14 +328,14 @@
       "vec3 gObj = bF.xyz * 0.7 * uAmp * uFreq;",
       "float ao = mix(0.8, 1.04, bF.w);",
       "vec3 col = mix(uColA, uColB, tip) * ao;",
-      "float glint = smoothstep(0.88, 0.92, vn(vOpos * 90.0 + 7.0)) * 0.35;",
+      "float glint = smoothstep(0.86, 0.9, vn(vOpos * 70.0 + 7.0)) * 0.9;",
       "float rough = 0.55;"
     ],
     // основа меха: густой подшёрсток (сами волоски — слоями, см. buildFur)
     furbase: [
       "float zone = smoothstep(0.48, 0.53, vn(vOpos * 1.1 + 3.0));",
       "vec3 col = mix(uColA * 0.62, uColC * 0.8, zone);",
-      "vec3 gObj = vec3(0.0); float ao = 1.0; float glint = 0.0; float rough = 0.9;"
+      "vec3 gObj = vec3(0.0); float ao = 1.0; float glint = 0.0; float rough = 0.95; sheenK = 0.55;"
     ]
   };
 
@@ -360,11 +360,13 @@
         .replace("#include <begin_vertex>", "#include <begin_vertex>\nvOpos = opos; vNm0 = normalMatrix[0]; vNm1 = normalMatrix[1]; vNm2 = normalMatrix[2];");
       s.fragmentShader = s.fragmentShader
         .replace("#include <common>", "#include <common>\n" + HEAD + "\n" + NOISE)
-        .replace("#include <color_fragment>", "#include <color_fragment>\n" + KINDS[kind].join("\n") +
+        .replace("#include <color_fragment>", "#include <color_fragment>\nfloat sheenK = 0.0;\n" + KINDS[kind].join("\n") +
           "\ndiffuseColor.rgb *= col;\ndiffuseColor.rgb = mix(diffuseColor.rgb, uColD, glint);")
         .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = mix(rough, 0.22, glint);")
         .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.35, glint);")
-        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += uColD * glint * 0.35;")
+        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += uColD * glint * 0.35;\n" +
+          // бархат: мягкий светлый отсвет по краю силуэта, как у ворса
+          "totalEmissiveRadiance += mix(uColA, vec3(1.0), 0.6) * sheenK * pow(1.0 - abs(dot(normal, normalize(vViewPosition))), 2.5);")
         .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\nvec3 gV = mat3(vNm0, vNm1, vNm2) * gObj; gV -= dot(gV, normal) * normal;\nnormal = normalize(normal - gV * (gl_FrontFacing ? 1.0 : -1.0));");
     };
     return m;
@@ -375,7 +377,7 @@
   function buildFur(sh, geo) {
     var L = sh.layers || 24, c = sh.colors;
     function lin(x) { return new THREE.Color(x).convertSRGBToLinear(); }
-    var U = { uLen: { value: sh.furLen || 0.15 }, uFreq: { value: 58 }, uColA: { value: lin(c.a) }, uColB: { value: lin(c.b) }, uColC: { value: lin(c.c) } };
+    var U = { uLen: { value: sh.furLen || 0.15 }, uFreq: { value: 46 }, uColA: { value: lin(c.a) }, uColB: { value: lin(c.b) }, uColC: { value: lin(c.c) } };
     var g = geo.clone();
     var layer = new Float32Array(L);
     for (var i = 0; i < L; i++) layer[i] = (i + 1) / L;
