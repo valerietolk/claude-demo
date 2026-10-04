@@ -36,7 +36,7 @@
         { c: [[-0.85, -0.55, 0], [0.75, 0.8, -0.1], 0.42, 0.4] },
         { c: [[0.05, 0.1, 0], [1.15, -0.95, 0.35], 0.34, 0.5] }
       ],
-      colors: { a: "#4A86FF", b: "#8DB4FF", c: "#B9E27A", d: "#FFFFFF" }, spotFreq: 5.2, zone: 1, glint: 0
+      colors: { a: "#141414", b: "#3A3A3A", c: "#0B0B0B", d: "#F2F2F2" }, spotFreq: 5.2, zone: 0.8, glint: 0.6
     },
     { // 3. «пушистая»: розовый мех с жёлтыми зонами короткого ворса
       kind: "fur", mesh: "nets", k: 0.42, res: 84,
@@ -51,13 +51,13 @@
       colors: { a: "#F08A7E", b: "#FFF0EA", c: "#FFD23C", d: "#FFFFFF" }, furLen: 0.22, layers: 28
     },
     { // 4. «петля в панцире»: изогнутая трубка из плиток с белыми швами, оранжевый → жёлтый
-      kind: "cells", mesh: "nets", k: 0.3, res: 110,
+      kind: "beads", mesh: "nets", k: 0.3, res: 110,
       prims: [
         { p: [[-1.35, -0.75, 0.35, 0.5], [-0.55, -1.05, -0.15, 0.55], [0.45, -0.75, -0.35, 0.55], [1.0, 0.0, 0.15, 0.52],
               [0.45, 0.65, 0.55, 0.5], [-0.45, 0.85, 0.25, 0.52], [-1.0, 0.35, -0.35, 0.5], [-0.35, -0.15, -0.75, 0.46],
               [0.75, 0.35, -0.65, 0.5], [1.35, 1.05, -0.15, 0.55]] }
       ],
-      colors: { a: "#E8621A", b: "#FFC83A", c: "#FFF6EA", d: "#E2483A" }
+      colors: { a: "#161616", b: "#383838", c: "#0C0C0C", d: "#F2F2F2" }, spotFreq: 4.6, zone: 0.7, glint: 0.5
     },
     { // 5. «кольцо из шаров»: мягкие цветные зоны — сиреневый, оранжевый, белый, жёлтый
       kind: "zones", mesh: "nets", k: 0.32, res: 110,
@@ -70,7 +70,7 @@
         }
         return P;
       })(),
-      pal: ["#8F7CF0", "#F28A5B", "#F4F1F6", "#F7E35A", "#F4F1F6", "#F7A87A"]
+      pal: ["#F25A1F", "#FFB58A", "#FF7A30", "#FFD3B4", "#FF8A3D", "#FFA36B"]
     },
     { // 6. «многолапая»: белая в мелком зерне, лаймовые кончики лап
       kind: "tips", mesh: "ray", k: 0.4,
@@ -85,7 +85,7 @@
         { c: [[0.4, -0.2, 0], [0.75, -1.3, 0.25], 0.42, 0.38] },
         { c: [[-0.2, 0.1, 0], [-0.15, 0.3, 1.15], 0.4, 0.36] }
       ],
-      colors: { a: "#F6F4F7", b: "#D9EC4A", c: "#B9A6F2", d: "#FFFFFF" }, tip: 1.42
+      colors: { a: "#151515", b: "#3C3C3C", c: "#222222", d: "#F2F2F2" }, tip: 1.42
     },
     { // 7. «облако»: оранжевое со светлыми пятнами — финал
       kind: "beads", mesh: "ray", k: 0.45,
@@ -375,7 +375,7 @@
   function buildFur(sh, geo) {
     var L = sh.layers || 24, c = sh.colors;
     function lin(x) { return new THREE.Color(x).convertSRGBToLinear(); }
-    var U = { uLen: { value: sh.furLen || 0.15 }, uFreq: { value: 110 }, uColA: { value: lin(c.a) }, uColB: { value: lin(c.b) }, uColC: { value: lin(c.c) } };
+    var U = { uLen: { value: sh.furLen || 0.15 }, uFreq: { value: 58 }, uColA: { value: lin(c.a) }, uColB: { value: lin(c.b) }, uColC: { value: lin(c.c) } };
     var g = geo.clone();
     var layer = new Float32Array(L);
     for (var i = 0; i < L; i++) layer[i] = (i + 1) / L;
@@ -402,7 +402,7 @@
           "if (vLayer > lenF) discard;",
           "float h = vLayer / lenF;",
           "float f1, f2; vec3 o1, o2; voro(vOpos * uFreq, 0.85, f1, f2, o1, o2);",
-          "if (f1 > 0.42 * (1.0 - pow(h, 1.1))) discard;",
+          "if (f1 > 0.5 * (1.0 - pow(h, 1.4))) discard;",
           "vec3 col = mix(mix(uColA, uColB, h * h), uColC * mix(0.8, 1.1, h), zone);",
           "diffuseColor.rgb *= col * mix(0.5, 1.05, h);"
         ].join("\n"));
