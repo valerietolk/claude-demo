@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Claude: ликбез</title>
+  <meta name="description" content="Презентация о Claude для дизайнеров">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="preload" href="../fonts/LORE-Cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="v3.css">
+</head>
+<body data-tone="black">
+
+  <!-- 1. Прелоадер -->
+  <div class="boot" id="boot">
+    <div class="bar"><i id="bootBar"></i></div>
+    <p id="bootPct">ЗАГРУЗКА 0%</p>
+  </div>
+
+  <!-- 2. Сцена: звезда Claude, которую «прокручивает» скролл -->
+  <div class="stage" id="stage">
+    <canvas id="scene"></canvas>
+    <div class="veil"></div>
+    <div class="grain"></div>
+  </div>
+
+  <i class="meter" id="meter"></i>
+
+  <!-- 3. Шапка -->
+  <header class="chrome">
+    <button class="mark" type="button" data-go="intro"><span class="mark-star" aria-hidden="true">&#10033;</span>&nbsp;Claude · ликбез</button>
+    <nav class="nav">
+      <span class="count" id="count" aria-live="polite"></span>
+      <button class="pill" type="button" id="menuBtn" aria-expanded="false" aria-controls="menu">Содержание</button>
+    </nav>
+  </header>
+
+  <!-- 4. Интро: панели поверх сцены, высоту даёт только .track -->
+  <div class="intro" id="intro">
+    <main class="panels">
+      <section class="panel" data-panel>
+        <p class="eyebrow">ликбез <span>&middot;</span> 12 глав</p>
+        <h1 class="display">Claude - AI у которого появились руки</h1>
+        <p class="sub">Claude — ИИ от Anthropic, который не просто отвечает в чате, а умеет действовать: ходить по сайтам, работать с файлами, взаимодействовать с Figma, писать код, создавать прототипы и запускать задачи самостоятельно.</p>
+        <p class="scroll-hint" aria-hidden="true">листай ↓</p>
+      </section>
+      <section class="panel" data-panel>
+        <p class="eyebrow">ликбез</p>
+        <h1 class="display">Ты ставишь задачу: <s class="lore">раб</s> Claude идёт и делает.</h1>
+        <p class="sub">Исследовать · Проектировать · Критиковать · Систематизировать · Проверять · Создавать · Автоматизировать</p>
+      </section>
+      <section class="panel" data-panel>
+        <p class="eyebrow">12 глав</p>
+        <h1 class="display">chat / chrome / design / code</h1>
+        <p class="sub">Где работать с Claude</p>
+        <div class="cta">
+          <button class="pill pill--big" type="button" data-go="0">Начать</button>
+          <button class="pill pill--ghost" type="button" data-menu>Содержание</button>
+        </div>
+      </section>
+    </main>
+    <div class="track"></div>
+  </div>
+
+  <!-- 5. Главы: каждая — отдельный экран, переход — волна цвета от курсора -->
+  <div class="chapters" id="chapters" hidden></div>
+
+  <!-- 6. Меню-содержание -->
+  <div class="menu" id="menu" hidden>
+    <div class="menu__inner">
+      <p class="menu__eyebrow">Содержание</p>
+      <ol class="menu__list" id="menuList"></ol>
+    </div>
+    <div class="menu__preview" id="preview" aria-hidden="true">
+      <span class="menu__preview-num"></span>
+      <span class="menu__preview-lead"></span>
+    </div>
+  </div>
+
+  <!-- 7. Курсор -->
+  <div class="cursor" id="cursor" aria-hidden="true"><i></i><span></span></div>
+
+  <script src="../vendor/marked.min.js"></script>
+  <script src="v3.js"></script>
+</body>
+</html>
