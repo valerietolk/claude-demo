@@ -34,7 +34,7 @@
         { c: [[-0.85, -0.55, 0], [0.75, 0.8, -0.1], 0.42, 0.4] },
         { c: [[0.05, 0.1, 0], [1.15, -0.95, 0.35], 0.34, 0.5] }
       ],
-      colors: { base: "#F1F2F8", spots: "#3A35EE", patch: "#B9E27A" }, spotFreq: 5.2, patch: 1
+      colors: { base: "#4A86FF", spots: "#8DB4FF", patch: "#B9E27A" }, spotFreq: 5.2, patch: 1
     },
     { // «облако» из нескольких лап (как сиреневая с узором)
       k: 0.45,
@@ -46,7 +46,7 @@
         { c: [[0, 0, 0], [1.05, -0.75, 0.5], 0.5, 0.42] },
         { s: [-0.35, 0.85, -0.3, 0.6] }
       ],
-      colors: { base: "#6E66FF", spots: "#D9D5FF", patch: "#8C85FF" }, spotFreq: 3.4, patch: 0.5
+      colors: { base: "#FF7430", spots: "#FFD6B8", patch: "#FF9A3C", glint: "#FFE3A0" }, spotFreq: 3.4, patch: 0.6, glint: 0.7
     }
   ];
 

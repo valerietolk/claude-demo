@@ -62,7 +62,7 @@ body{
 /* ---------- контент глав ---------- */
 .content{ position:relative; z-index:2; padding:8vh 0 30vh; }
 .chapter{
-  width:min(640px, calc(100% - 32px));
+  width:min(864px, calc(100% - 32px));
   margin:0 0 0 clamp(16px, 9vw, 150px);
   padding:16vh 0 4vh;
 }
@@ -120,21 +120,22 @@ body{
 .rail.on{ opacity:1; pointer-events:auto; }
 .glass{ background:rgba(255,255,255,.3); -webkit-backdrop-filter:blur(18px) saturate(1.5); backdrop-filter:blur(18px) saturate(1.5);
   box-shadow:inset 0 0 0 .5px rgba(255,255,255,.7), inset 0 1px 0 rgba(255,255,255,.6), 0 8px 24px rgba(0,0,0,.07); }
-.burger{ width:34px; height:34px; border:0; border-radius:50%; cursor:pointer; color:var(--ink); display:grid; place-items:center;
-  transition:transform .3s var(--ease-out), background .3s; }
-.burger:hover{ transform:scale(1.06); background:rgba(255,255,255,.45); }
-.burger svg{ width:14px; height:14px; }
-.pill{ position:relative; padding:7px 0; border-radius:999px; width:24px; }
+.burger{ width:34px; height:34px; border:0; background:none; cursor:pointer; color:#fff; display:grid; place-items:center;
+  filter:drop-shadow(0 0 4px rgba(255,255,255,.7)) drop-shadow(0 1px 3px rgba(0,0,0,.18)); transition:transform .3s var(--ease-out); }
+.burger:hover{ transform:scale(1.1); }
+.burger svg{ width:18px; height:18px; }
+.pill{ position:relative; padding:4px 0; width:24px; }
 .dots{ list-style:none; display:flex; flex-direction:column; align-items:center; }
 .dot{ position:relative; display:grid; place-items:center; width:24px; height:18px; border:0; background:none; cursor:pointer; }
-.dot::before{ content:""; width:6px; height:6px; border-radius:50%; background:rgba(31,13,4,.26); transition:background .3s, transform .3s var(--ease-out); }
-.dot:hover::before{ background:rgba(31,13,4,.5); transform:scale(1.2); }
+.dot::before{ content:""; width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.85);
+  box-shadow:0 0 6px 1px rgba(255,255,255,.75), 0 1px 3px rgba(0,0,0,.16); transition:background .3s, transform .3s var(--ease-out); }
+.dot:hover::before{ background:#fff; transform:scale(1.3); }
 .dot span{ position:absolute; right:34px; top:50%; transform:translate(4px,-50%); white-space:nowrap; font:400 13px/1 Inter, sans-serif; color:var(--ink);
   padding:7px 11px; border-radius:999px; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s var(--ease-out); }
 .dot:hover span, .dot:focus-visible span{ opacity:1; transform:translate(0,-50%); }
 /* капля: тянется от точки к точке и догоняет сама себя, как жидкость */
 .drop{ position:absolute; left:50%; top:0; width:8px; height:8px; margin-left:-4px; border-radius:999px; pointer-events:none;
-  background:var(--accent); box-shadow:0 0 0 2px rgba(255,255,255,.55), 0 2px 8px rgba(0,0,0,.18); will-change:transform,height; }
+  background:var(--accent); box-shadow:0 0 0 2px #fff, 0 0 10px 2px rgba(255,255,255,.8), 0 2px 8px rgba(0,0,0,.18); will-change:transform,height; }
 .toc{ position:fixed; z-index:30; right:clamp(14px, 2.2vw, 36px); top:50%; width:min(340px, calc(100vw - 28px)); max-height:80vh; overflow:auto;
   transform:translate(8px,-50%) scale(.98); transform-origin:right center; opacity:0; visibility:hidden;
   padding:10px; border-radius:24px; background:rgba(255,255,255,.5); -webkit-backdrop-filter:blur(26px) saturate(1.6); backdrop-filter:blur(26px) saturate(1.6);
@@ -174,10 +175,10 @@ body{
 <main class="content" id="content"></main>
 
 <nav class="rail" id="rail" aria-label="Главы">
-  <button class="burger glass" id="burger" type="button" aria-label="Содержание" aria-expanded="false">
+  <button class="burger" id="burger" type="button" aria-label="Содержание" aria-expanded="false">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
   </button>
-  <div class="pill glass"><ol class="dots" id="dots"></ol><i class="drop" id="drop"></i></div>
+  <div class="pill"><ol class="dots" id="dots"></ol><i class="drop" id="drop"></i></div>
 </nav>
 <div class="toc" id="toc" role="dialog" aria-label="Содержание"><ol id="tocList"></ol></div>
 
@@ -284,8 +285,8 @@ body{
   // ---------- палитры: у каждой фигуры свой фон ----------
   var PALETTES = [
     { bg: ["#FDBC57", "#FF8A4A", "#FF7645", "rgba(232,84,40,.55)"], bounce: "#C8502A", accent: "#E8501C" },   // оранжевый — оранжевая «звезда» с золотыми искрами
-    { bg: ["#EFE9FF", "#C6B8FF", "#A28FFF", "rgba(110,80,240,.40)"], bounce: "#7A62E8", accent: "#5B43F0" },  // лиловый — сине-лаймовая «гантель»
-    { bg: ["#F3FFD2", "#D5F48A", "#B5E752", "rgba(120,190,20,.40)"], bounce: "#8CC23A", accent: "#4C8A0E" }   // лайм — сиреневое «облако»
+    { bg: ["#EFE9FF", "#C6B8FF", "#A28FFF", "rgba(110,80,240,.40)"], bounce: "#7A62E8", accent: "#5B43F0" },   // лиловый — голубая «гантель»  // лиловый — сине-лаймовая «гантель»
+    { bg: ["#FDBC57", "#FF8A4A", "#FF7645", "rgba(232,84,40,.55)"], bounce: "#C8502A", accent: "#E8501C" }   // снова оранжевый — оранжевое «облако»
   ];
   // откуда фигура въезжает (мировые единицы): первая уже на месте, вторая справа, третья снизу
   var ENTRY = [[0, 0, 0], [8, 0.5, 0], [0, -6.5, 0]];
@@ -339,9 +340,9 @@ body{
       // первый экран: фигура крупно за логотипом; дальше отходит вправо, освобождая место тексту
       var past = ramp(pageYOffset / innerHeight, 0.2, 1);
       var wide = innerWidth > 900;
-      FIG.shift(wide ? 0.2 * past : 0);
+      FIG.shift(wide ? 0.27 * past : 0);
       gl.style.opacity = wide ? "" : String(1 - 0.55 * past);
-      FIG.render(k, c, dt, 1 - 0.12 * (1 - past));
+      FIG.render(k, c, dt, 0.88 + 0.24 * past);
       stepDrop(dt);
     }
     requestAnimationFrame(frame);
