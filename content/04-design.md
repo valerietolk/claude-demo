@@ -1,4 +1,4 @@
-# Claude DESIGN
+# Claude Design
 
 ## тут должен был быть смешной тайтл
 

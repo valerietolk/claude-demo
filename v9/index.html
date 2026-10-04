@@ -70,9 +70,9 @@ body{
 .num{ display:block; margin-bottom:22px; font-size:13px; font-weight:400; letter-spacing:.06em; color:rgba(255,255,255,.72); }
 
 .doc h1{ overflow-wrap:break-word; font-weight:700; font-size:clamp(44px, 6vw, 84px); line-height:.98; letter-spacing:-.04em; text-wrap:balance; }
-.doc h2{ margin-top:22px; font-weight:700; font-size:22px; line-height:1.35; letter-spacing:-.015em; color:var(--ink-soft); text-wrap:balance; }
-.doc h3{ margin-top:clamp(56px, 9vh, 96px); font-weight:700; font-size:clamp(26px, 3vw, 40px); line-height:1.08; letter-spacing:-.03em; text-wrap:balance; }
-.doc h4{ margin-top:40px; font-weight:700; font-size:22px; line-height:1.3; letter-spacing:-.014em; }
+.doc h2{ margin-top:22px; font-weight:700; font-size:28px; line-height:1.35; letter-spacing:-.015em; color:var(--ink-soft); text-wrap:balance; }
+.doc h3{ margin-top:clamp(56px, 9vh, 96px); font-weight:700; font-size:24px; line-height:1.2; letter-spacing:-.03em; text-wrap:balance; }
+.doc h4{ margin-top:40px; font-weight:700; font-size:20px; line-height:1.3; letter-spacing:-.014em; }
 .doc p, .doc li, .doc td, .doc th{ font-size:clamp(16px, 1.2vw, 18px); line-height:1.6; letter-spacing:-.006em; text-wrap:pretty; }
 .doc > * + *, .doc .card > * + *{ margin-top:14px; }
 .doc h1 + *{ margin-top:22px; }
@@ -97,7 +97,8 @@ body{
 .doc .draft-inline{ color:var(--ink-soft); font-style:italic; }
 .doc .cards, .doc .groups{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; }
 .doc .card, .doc .groups > div{ padding:20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
-.doc .card h3, .doc .card h4{ margin:0; padding:0; border:0; font-size:24px; font-weight:700; letter-spacing:-.02em; }
+.doc .card h3{ margin:0; padding:0; border:0; font-size:24px; font-weight:700; letter-spacing:-.02em; }
+.doc .card h4{ margin:0; font-size:20px; }
 .doc .card p, .doc .card li{ font-size:15px; }
 .doc .groups b{ display:block; margin-bottom:6px; }
 .doc .compare{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -133,7 +134,7 @@ body{
 .dot{ position:relative; display:grid; place-items:center; width:24px; height:18px; border:0; background:none; cursor:pointer; }
 .dot::before{ content:""; width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.38);
   -webkit-backdrop-filter:blur(6px) saturate(1.4); backdrop-filter:blur(6px) saturate(1.4);
-  box-shadow:inset 0 0 0 .5px rgba(255,255,255,.6); transition:background .3s, transform .3s var(--ease-out); }
+  transition:background .3s, transform .3s var(--ease-out); }
 .dot:hover::before{ background:rgba(255,255,255,.7); transform:scale(1.25); }
 .dot span{ position:absolute; right:34px; top:50%; transform:translate(4px,-50%); white-space:nowrap; font:400 13px/1 Inter, sans-serif; color:var(--ink);
   padding:7px 11px; border-radius:999px; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s var(--ease-out); }
@@ -300,7 +301,8 @@ body{
   var BLACK = { bg: ["#2A2A2A", "#141414", "#070707", "rgba(255,120,60,.10)"], bounce: "#2A2A2A", accent: "#FF6A2C", dark: 1 };
   var PALETTES = [ORANGE, BLACK, ORANGE, BLACK, ORANGE, BLACK, ORANGE];
   // откуда фигура въезжает (мировые единицы): справа, снизу, слева, сверху…
-  var ENTRY = [[0, 0, 0], [8, 0.5, 0], [0, -6.5, 0], [-8, 0, 0], [0, 6.5, 0], [8, -0.5, 0], [0, -6.5, 0]];
+  // фигуры никогда не пересекают колонку текста: уходят вправо, новые приезжают справа, снизу или сверху
+  var ENTRY = [[0, 0, 0], [0, -6.5, 0], [8, 0.5, 0], [0, 6.5, 0], [8, -0.5, 0], [0, -6.5, 0], [8, 0, 0]];
   function rgba(c){
     if (c[0] === "#") return [parseInt(c.substr(1, 2), 16), parseInt(c.substr(3, 2), 16), parseInt(c.substr(5, 2), 16), 1];
     var m = c.match(/[\d.]+/g); return [+m[0], +m[1], +m[2], +m[3]];
@@ -317,7 +319,7 @@ body{
     for (var i = 0; i < 4; i++) stage.style.setProperty("--c" + (i + 1), css(mix(a.bg[i], b.bg[i], blend)));
     theme.setAttribute("content", hex(mix(a.bg[2], b.bg[2], blend)));
     document.documentElement.style.setProperty("--accent", hex(mix(a.accent, b.accent, blend)));
-    var d = (a.dark || 0) + ((b.dark || 0) - (a.dark || 0)) * blend, root = document.documentElement.style;
+    var d = smooth(clamp(((a.dark || 0) + ((b.dark || 0) - (a.dark || 0)) * blend - 0.4) / 0.2, 0, 1)), root = document.documentElement.style;
     root.setProperty("--ink", hex(mix("#1F0D04", "#F5F2EE", d)));
     root.setProperty("--rule", css(mix("rgba(31,13,4,.16)", "rgba(255,255,255,.16)", d)));
     root.setProperty("--glass", css(mix("rgba(255,236,214,.26)", "rgba(255,255,255,.07)", d)));
@@ -344,8 +346,8 @@ body{
       if (gSeek >= CYCLES){ k = CYCLES - 1; c = 1; }
       var e = ENTRY[k], n = k < CYCLES - 1 ? ENTRY[k + 1] : [0, 0, 0];
       var inK = 1 - ramp(c, 0, 0.1), outK = ramp(c, 0.92, 1);
-      FIG.place(e[0] * inK - n[0] * outK, e[1] * inK - n[1] * outK, 0);
-      applyPalette(k, k < CYCLES - 1 ? ramp(c, 0.88, 1) : 0);
+      FIG.place(e[0] * inK + 9 * outK * (k < CYCLES - 1 ? 1 : 0), e[1] * inK, 0);
+      applyPalette(k, k < CYCLES - 1 ? ramp(c, 0.97, 1) : 0);
       // первый экран: фигура крупно за логотипом; дальше отходит вправо, освобождая место тексту
       var past = ramp(pageYOffset / innerHeight, 0.2, 1);
       var wide = innerWidth > 900;
