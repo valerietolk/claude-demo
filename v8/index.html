@@ -94,7 +94,7 @@ body{
 .doc aside.draft::before{ content:"черновик · "; font-style:normal; font-weight:400; }
 .doc .draft-inline{ color:var(--ink-soft); font-style:italic; }
 .doc .cards, .doc .groups{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; }
-.doc .card, .doc .groups > div{ padding:20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); box-shadow:inset 0 0 0 1px rgba(255,255,255,.28); }
+.doc .card, .doc .groups > div{ padding:20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 .doc .card h3, .doc .card h4{ margin:0; padding:0; border:0; font-size:22px; font-weight:700; letter-spacing:-.02em; }
 .doc .card p, .doc .card li{ font-size:15px; }
 .doc .groups b{ display:block; margin-bottom:6px; }
@@ -112,42 +112,49 @@ body{
 .doc .thanks__title{ font-size:clamp(72px, 12vw, 180px); }
 .doc .thanks__note{ color:var(--ink-soft); }
 
-/* ---------- навигация: точки по числу глав + меню с содержанием ---------- */
-.rail{ position:fixed; z-index:20; left:clamp(14px, 2.4vw, 40px); top:50%; transform:translateY(-50%);
-  display:flex; flex-direction:column; align-items:center; gap:18px;
+/* ---------- навигация справа: стеклянная капсула с точками и «жидкой» каплей текущей главы ---------- */
+:root{ --accent:#E8501C; }
+.rail{ position:fixed; z-index:20; right:clamp(14px, 2.2vw, 36px); top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:10px;
   opacity:0; pointer-events:none; transition:opacity .6s var(--ease-out); }
 .rail.on{ opacity:1; pointer-events:auto; }
-.burger{ width:36px; height:36px; border:0; border-radius:50%; cursor:pointer; color:var(--ink);
-  display:grid; place-items:center; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.35); }
-.burger svg{ width:16px; height:16px; }
-.dots{ list-style:none; display:flex; flex-direction:column; align-items:center; gap:4px; }
-.dot{ position:relative; display:grid; place-items:center; width:20px; height:20px; border:0; background:none; cursor:pointer; }
-.dot::before{ content:""; width:8px; height:8px; border-radius:50%; box-shadow:inset 0 0 0 1.5px var(--ink); transition:transform .4s var(--ease-out), background .3s; }
-.dot.is-active::before{ background:var(--ink); transform:scale(1.3); }
-.dot span{ position:absolute; left:28px; top:50%; transform:translate(-4px,-50%); white-space:nowrap; font:400 13px/1 Inter, sans-serif; color:var(--ink);
-  padding:6px 10px; border-radius:999px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
-  opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; }
+.glass{ background:rgba(255,255,255,.3); -webkit-backdrop-filter:blur(18px) saturate(1.5); backdrop-filter:blur(18px) saturate(1.5);
+  box-shadow:inset 0 0 0 .5px rgba(255,255,255,.7), inset 0 1px 0 rgba(255,255,255,.6), 0 8px 24px rgba(0,0,0,.07); }
+.burger{ width:34px; height:34px; border:0; border-radius:50%; cursor:pointer; color:var(--ink); display:grid; place-items:center;
+  transition:transform .3s var(--ease-out), background .3s; }
+.burger:hover{ transform:scale(1.06); background:rgba(255,255,255,.45); }
+.burger svg{ width:14px; height:14px; }
+.pill{ position:relative; padding:7px 0; border-radius:999px; width:24px; }
+.dots{ list-style:none; display:flex; flex-direction:column; align-items:center; }
+.dot{ position:relative; display:grid; place-items:center; width:24px; height:18px; border:0; background:none; cursor:pointer; }
+.dot::before{ content:""; width:6px; height:6px; border-radius:50%; background:rgba(31,13,4,.26); transition:background .3s, transform .3s var(--ease-out); }
+.dot:hover::before{ background:rgba(31,13,4,.5); transform:scale(1.2); }
+.dot span{ position:absolute; right:34px; top:50%; transform:translate(4px,-50%); white-space:nowrap; font:400 13px/1 Inter, sans-serif; color:var(--ink);
+  padding:7px 11px; border-radius:999px; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s var(--ease-out); }
 .dot:hover span, .dot:focus-visible span{ opacity:1; transform:translate(0,-50%); }
-.toc{ position:fixed; z-index:30; left:clamp(14px, 2.4vw, 40px); top:50%; width:min(360px, calc(100vw - 28px)); max-height:80vh; overflow:auto;
-  transform:translate(-8px,-50%) scale(.98); transform-origin:left center; opacity:0; visibility:hidden;
-  padding:14px; border-radius:22px; background:rgba(255,245,235,.55); -webkit-backdrop-filter:blur(22px) saturate(1.2); backdrop-filter:blur(22px) saturate(1.2);
-  box-shadow:0 20px 60px rgba(40,10,0,.18), inset 0 0 0 1px rgba(255,255,255,.5);
+/* капля: тянется от точки к точке и догоняет сама себя, как жидкость */
+.drop{ position:absolute; left:50%; top:0; width:8px; height:8px; margin-left:-4px; border-radius:999px; pointer-events:none;
+  background:var(--accent); box-shadow:0 0 0 2px rgba(255,255,255,.55), 0 2px 8px rgba(0,0,0,.18); will-change:transform,height; }
+.toc{ position:fixed; z-index:30; right:clamp(14px, 2.2vw, 36px); top:50%; width:min(340px, calc(100vw - 28px)); max-height:80vh; overflow:auto;
+  transform:translate(8px,-50%) scale(.98); transform-origin:right center; opacity:0; visibility:hidden;
+  padding:10px; border-radius:24px; background:rgba(255,255,255,.5); -webkit-backdrop-filter:blur(26px) saturate(1.6); backdrop-filter:blur(26px) saturate(1.6);
+  box-shadow:0 24px 60px rgba(0,0,0,.12), inset 0 0 0 .5px rgba(255,255,255,.8);
   transition:opacity .35s var(--ease-out), transform .35s var(--ease-out), visibility 0s .35s; }
 .toc.is-open{ opacity:1; visibility:visible; transform:translate(0,-50%); transition:opacity .35s var(--ease-out), transform .35s var(--ease-out); }
 .toc ol{ list-style:none; }
-.toc button{ display:flex; gap:12px; align-items:baseline; width:100%; padding:9px 10px; border:0; border-radius:12px; background:none; cursor:pointer; text-align:left;
-  font:400 16px/1.3 Inter, sans-serif; color:var(--ink); }
-.toc button:hover{ background:rgba(255,255,255,.4); }
-.toc button.is-active{ font-weight:700; }
+.toc button{ display:flex; gap:12px; align-items:baseline; width:100%; padding:9px 12px; border:0; border-radius:14px; background:none; cursor:pointer; text-align:left;
+  font:400 15px/1.3 Inter, sans-serif; color:var(--ink); transition:background .2s; }
+.toc button:hover{ background:rgba(255,255,255,.55); }
+.toc button.is-active{ font-weight:700; background:rgba(255,255,255,.7); }
 .toc small{ font-size:12px; min-width:20px; }
 
 @media (max-width: 760px){
-  .rail{ left:auto; right:6px; gap:12px; }
+  .rail{ right:6px; gap:8px; }
   .burger{ width:30px; height:30px; }
-  .dot{ width:16px; height:16px; }
+  .pill{ width:20px; padding:5px 0; }
+  .dot{ width:20px; height:15px; }
   .dot span{ display:none; }
-  .toc{ left:auto; right:14px; transform-origin:right center; }
+  .toc{ right:14px; }
   .chapter{ width:calc(100% - 52px); margin:0 0 0 16px; padding-top:12vh; }
   .doc .compare{ grid-template-columns:1fr; }
 }
@@ -167,10 +174,10 @@ body{
 <main class="content" id="content"></main>
 
 <nav class="rail" id="rail" aria-label="Главы">
-  <button class="burger" id="burger" type="button" aria-label="Содержание" aria-expanded="false">
+  <button class="burger glass" id="burger" type="button" aria-label="Содержание" aria-expanded="false">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
   </button>
-  <ol class="dots" id="dots"></ol>
+  <div class="pill glass"><ol class="dots" id="dots"></ol><i class="drop" id="drop"></i></div>
 </nav>
 <div class="toc" id="toc" role="dialog" aria-label="Содержание"><ol id="tocList"></ol></div>
 
@@ -194,6 +201,14 @@ body{
   function esc(t){ return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   function ramp(p, a, b){ return smooth(clamp((p - a) / (b - a), 0, 1)); }
 
+  // эмодзи в презентации не показываем; сами тексты глав не меняем
+  var EMOJI = /(?:\p{Extended_Pictographic}|\p{Regional_Indicator})(?:\uFE0F|\u200D(?:\p{Extended_Pictographic})\uFE0F?)*\s?/gu;
+  function stripEmoji(root){
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), n, list = [];
+    while ((n = w.nextNode())) list.push(n);
+    list.forEach(function(t){ var v = t.nodeValue.replace(EMOJI, "").replace(/\uFE0F/g, ""); if (v !== t.nodeValue) t.nodeValue = v; });
+  }
+
   function render(md){
     md.forEach(function(text, i){
       var sec = document.createElement("section");
@@ -205,6 +220,7 @@ body{
       doc.querySelectorAll("h1").forEach(function(h){
         if (h.children.length === 0 && h.textContent.indexOf("/") >= 0) h.innerHTML = h.textContent.split("/").map(esc).join("/<wbr>");
       });
+      stripEmoji(doc);
       doc.querySelectorAll("table").forEach(function(t){ var w = document.createElement("div"); w.className = "table-wrap"; t.parentNode.replaceChild(w, t); w.appendChild(t); });
       doc.querySelectorAll("a[href^='http']").forEach(function(a){ a.target = "_blank"; a.rel = "noopener"; });
       var num = document.createElement("span");
@@ -226,7 +242,7 @@ body{
       var h1 = sec.querySelector("h1"), title = h1 ? h1.textContent.trim() : "Глава " + (i + 1);
       var li = document.createElement("li"), b = document.createElement("button");
       b.type = "button"; b.className = "dot"; b.setAttribute("aria-label", title);
-      b.innerHTML = "<span>" + esc(title) + "</span>";
+      b.innerHTML = '<span class="glass">' + esc(title) + "</span>";
       b.addEventListener("click", function(){ go(i); });
       li.appendChild(b); dots.appendChild(li);
       var tl = document.createElement("li"), tb = document.createElement("button");
@@ -242,6 +258,19 @@ body{
   burger.addEventListener("click", function(e){ e.stopPropagation(); toc.classList.contains("is-open") ? closeToc() : openToc(); });
   document.addEventListener("click", function(e){ if (!toc.contains(e.target)) closeToc(); });
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeToc(); });
+  var drop = document.getElementById("drop"), head = -1, tail = -1;
+  function stepDrop(dt){
+    if (active < 0 || !dots.children.length) return;
+    var b = dots.children[active].firstChild, target = b.offsetTop + b.offsetHeight / 2;
+    if (head < 0){ head = tail = target; }
+    head += (target - head) * (1 - Math.exp(-dt * 16));   // голова быстрая
+    tail += (target - tail) * (1 - Math.exp(-dt * 5));    // хвост тянется следом
+    var top = Math.min(head, tail), len = Math.abs(head - tail);
+    var w = 8 - Math.min(2.5, len * 0.05);                 // вытягиваясь, капля становится тоньше
+    drop.style.height = (len + w) + "px";
+    drop.style.width = w + "px"; drop.style.marginLeft = (-w / 2) + "px";
+    drop.style.transform = "translateY(" + (top - w / 2) + "px)";
+  }
   function markNav(y){
     rail.classList.toggle("on", y > innerHeight * 0.6);
     var cur = 0;
@@ -254,9 +283,9 @@ body{
 
   // ---------- палитры: у каждой фигуры свой фон ----------
   var PALETTES = [
-    { bg: ["#FDBC57", "#FF8A4A", "#FF7645", "rgba(232,84,40,.55)"], bounce: "#C8502A" },   // оранжевый — сиренево-жёлтая «звезда»
-    { bg: ["#EFE9FF", "#C6B8FF", "#A28FFF", "rgba(110,80,240,.40)"], bounce: "#7A62E8" },  // лиловый — сине-лаймовая «гантель»
-    { bg: ["#F3FFD2", "#D5F48A", "#B5E752", "rgba(120,190,20,.40)"], bounce: "#8CC23A" }   // лайм — сиреневое «облако»
+    { bg: ["#FDBC57", "#FF8A4A", "#FF7645", "rgba(232,84,40,.55)"], bounce: "#C8502A", accent: "#E8501C" },   // оранжевый — оранжевая «звезда» с золотыми искрами
+    { bg: ["#EFE9FF", "#C6B8FF", "#A28FFF", "rgba(110,80,240,.40)"], bounce: "#7A62E8", accent: "#5B43F0" },  // лиловый — сине-лаймовая «гантель»
+    { bg: ["#F3FFD2", "#D5F48A", "#B5E752", "rgba(120,190,20,.40)"], bounce: "#8CC23A", accent: "#4C8A0E" }   // лайм — сиреневое «облако»
   ];
   // откуда фигура въезжает (мировые единицы): первая уже на месте, вторая справа, третья снизу
   var ENTRY = [[0, 0, 0], [8, 0.5, 0], [0, -6.5, 0]];
@@ -275,6 +304,7 @@ body{
     lastPal = key;
     for (var i = 0; i < 4; i++) stage.style.setProperty("--c" + (i + 1), css(mix(a.bg[i], b.bg[i], blend)));
     theme.setAttribute("content", hex(mix(a.bg[2], b.bg[2], blend)));
+    document.documentElement.style.setProperty("--accent", hex(mix(a.accent, b.accent, blend)));
     FIG.bounce(hex(mix(a.bounce, b.bounce, blend)));
   }
 
@@ -312,6 +342,7 @@ body{
       FIG.shift(wide ? 0.2 * past : 0);
       gl.style.opacity = wide ? "" : String(1 - 0.55 * past);
       FIG.render(k, c, dt, 1 - 0.12 * (1 - past));
+      stepDrop(dt);
     }
     requestAnimationFrame(frame);
   }

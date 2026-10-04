@@ -24,7 +24,7 @@
         { c: [[0, 0, 0], [1.05, -1.0, 0.3], 0.52, 0.58] },
         { c: [[0, 0.3, 0], [0.15, 1.45, 0.35], 0.42, 0.55] }
       ],
-      colors: { base: "#F7F5EC", spots: "#7357F2", patch: "#F4E978" }, spotFreq: 4.2, patch: 0.8
+      colors: { base: "#F4561C", spots: "#FFE6CC", patch: "#C9340F", glint: "#FFE3A0" }, spotFreq: 4.2, patch: 0.7, glint: 1
     },
     { // «гантель с отростком» (как сине-белая с лаймом)
       k: 0.5,
@@ -102,8 +102,8 @@
   // ---------- материал: гранулы, пятна крупных гранул и большие цветные зоны ----------
   var GLSL = [
     "varying vec3 vOpos; varying vec3 vNm0, vNm1, vNm2;",
-    "uniform float uFreq, uAmp, uSpotFreq, uPatch;",
-    "uniform vec3 uColA, uColB, uColC;",
+    "uniform float uFreq, uAmp, uSpotFreq, uPatch, uGlint;",
+    "uniform vec3 uColA, uColB, uColC, uColD;",
     "vec3 h33(vec3 p){ p = vec3(dot(p, vec3(127.1, 311.7, 74.7)), dot(p, vec3(269.5, 183.3, 246.1)), dot(p, vec3(113.5, 271.9, 124.6))); return fract(sin(p) * 43758.5453123); }",
     "float h31(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }",
     "float vn(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);",
@@ -123,7 +123,8 @@
       uFreq: { value: 34 }, uAmp: { value: 0.011 }, uSpotFreq: { value: o.spotFreq }, uPatch: { value: o.patch },
       uColA: { value: new THREE.Color(o.colors.base).convertSRGBToLinear() },
       uColB: { value: new THREE.Color(o.colors.spots).convertSRGBToLinear() },
-      uColC: { value: new THREE.Color(o.colors.patch).convertSRGBToLinear() }
+      uColC: { value: new THREE.Color(o.colors.patch).convertSRGBToLinear() },
+      uColD: { value: new THREE.Color(o.colors.glint || "#ffffff").convertSRGBToLinear() }, uGlint: { value: o.glint || 0 }
     };
     var m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5, metalness: 0, envMapIntensity: 0.85 });
     m.userData.u = U;
@@ -145,8 +146,14 @@
           "vec3 gObj = mix(bF.xyz * 0.45, bB.xyz * 1.25, spot) * uAmp * uFreq;",
           "float ao = mix(bF.w, bB.w, spot);",
           "vec3 col = mix(mix(uColA, uColC, zone), uColB, spot);",
-          "diffuseColor.rgb *= col * mix(0.62, 1.06, ao);"
+          "diffuseColor.rgb *= col * mix(0.62, 1.06, ao);",
+          // золотые искры: редкие гранулы-«блёстки», металлические и гладкие — ловят свет при повороте
+          "float glint = smoothstep(0.86, 0.9, vn(vOpos * 60.0 + 31.0)) * uGlint;",
+          "diffuseColor.rgb = mix(diffuseColor.rgb, uColD, glint);"
         ].join("\n"))
+        .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.22, glint);")
+        .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.35, glint);")
+        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += uColD * glint * 0.35;")
         .replace("#include <normal_fragment_maps>", [
           "#include <normal_fragment_maps>",
           "vec3 gV = mat3(vNm0, vNm1, vNm2) * gObj; gV -= dot(gV, normal) * normal;",
