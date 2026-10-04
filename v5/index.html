@@ -43,6 +43,13 @@ body.sheet-open{ overflow:hidden; }
   position:absolute; top:50%; left:50%; width:100%; height:100%;
   transform:translate(-50%,-50%) scale(1.02);
   object-fit:cover; filter:contrast(1.02); will-change:transform;
+  /* ролик светлый: в режиме «умножение» его белый фон сливается с бумагой и остаётся только объект,
+     а края кадра растворяются — поэтому его можно двигать, вращать и отражать без видимой рамки */
+  mix-blend-mode:multiply;
+  -webkit-mask-image:linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
+  -webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
+  mask-composite:intersect;
 }
 /* светлая вуаль: видео очень светлое, у шапки и подвала она плотнее */
 .veil{
@@ -420,6 +427,47 @@ body.menu-open .chrome{ z-index:80; background:none; }
     track.style.setProperty("--n", n);
   }
 
+  // ---------- бублик: у каждой панели своё положение ----------
+  // x, y — сдвиг в % экрана; s — масштаб; r — наклон в градусах; f — 1 или −1 (отражение).
+  // Между панелями положения плавно перетекают; при смене f ролик переворачивается, как карточка.
+  var POSES = [
+    { x:  0, y:  0, s: 1.02, r:   0, f:  1 },
+    { x: 24, y:  6, s: 0.86, r:  -8, f: -1 },
+    { x:-24, y: -4, s: 0.92, r:   7, f:  1 },
+    { x:  0, y: 14, s: 1.32, r:   0, f: -1 },
+    { x: 28, y:-10, s: 0.78, r:  14, f:  1 },
+    { x:-26, y:  8, s: 0.9,  r: -12, f: -1 },
+    { x: 18, y: 16, s: 1.15, r:   5, f:  1 },
+    { x:-18, y:-14, s: 0.82, r:  -6, f: -1 },
+    { x:  0, y: -8, s: 1.24, r:  10, f:  1 },
+    { x: 26, y:  0, s: 0.88, r: -14, f: -1 },
+    { x:-28, y:  4, s: 0.94, r:   9, f:  1 },
+    { x: 12, y: 10, s: 1.08, r:  -4, f: -1 },
+    { x:  0, y:  0, s: 1.02, r:   0, f:  1 }
+  ];
+  var mouse = { x: 0, y: 0, sx: 0, sy: 0 };
+  window.addEventListener("pointermove", function(e){
+    mouse.x = e.clientX / innerWidth * 2 - 1;
+    mouse.y = e.clientY / innerHeight * 2 - 1;
+  }, { passive: true });
+  var poseAt = 0;
+  function placeClip(){
+    var n = panels.length || 1;
+    // позиция в «панелях»: центр панели i — это i
+    var target = clamp(progress * n - 0.5, 0, n - 1);
+    poseAt += (target - poseAt) * 0.08;
+    var i = Math.floor(poseAt), k = smooth(poseAt - i);
+    var a = POSES[i % POSES.length], b = POSES[Math.min(i + 1, n - 1) % POSES.length];
+    var L = function(p){ return a[p] + (b[p] - a[p]) * k; };
+    mouse.sx += (mouse.x - mouse.sx) * 0.04;
+    mouse.sy += (mouse.y - mouse.sy) * 0.04;
+    var x = L("x") + mouse.sx * 2.5, y = L("y") + mouse.sy * 2.5;
+    var s = L("s"), r = L("r") + mouse.sx * 3, f = L("f");
+    // при |f| около нуля ролик «на ребре» — чуть подтягиваем, чтобы не исчезал совсем
+    var fx = (Math.abs(f) < 0.06 ? (f < 0 ? -0.06 : 0.06) : f);
+    clip.style.transform = "translate(-50%,-50%) translate(" + x.toFixed(2) + "vw," + y.toFixed(2) + "vh) rotate(" + r.toFixed(2) + "deg) scale(" + (s * fx).toFixed(3) + "," + s.toFixed(3) + ")";
+  }
+
   // ---------- прокрутка видео ----------
   var DRIFT = 22;
   var progress = 0, seekTo = 0, seekAt = 0, duration = 0, ready = false, visible = 0;
@@ -464,6 +512,7 @@ body.menu-open .chrome{ z-index:80; background:none; }
       }
     }
     paint();
+    placeClip();
     requestAnimationFrame(frame);
   }
 
