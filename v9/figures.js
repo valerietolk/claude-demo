@@ -28,15 +28,16 @@
       ],
       colors: { a: "#F4561C", b: "#FFE6CC", c: "#C9340F", d: "#FFE3A0" }, spotFreq: 4.2, zone: 0.7, glint: 1
     },
-    { // 2. «гантель с отростком»: голубая со светлыми пятнами и лаймом
-      kind: "beads", mesh: "ray", k: 0.5,
+    { // 2. «пористая скорлупа»: ветвистая фигура с кратерами, внутри светится фиолетовый
+      // (цвет скорлупы — под фон раздела: на чёрном она чёрная)
+      kind: "pores", mesh: "ray", k: 0.38,
       prims: [
-        { s: [-0.85, -0.55, 0, 0.92] },
-        { s: [0.75, 0.8, -0.1, 0.82] },
-        { c: [[-0.85, -0.55, 0], [0.75, 0.8, -0.1], 0.42, 0.4] },
-        { c: [[0.05, 0.1, 0], [1.15, -0.95, 0.35], 0.34, 0.5] }
+        { c: [[0.05, -1.45, 0.1], [0.05, 0.35, 0], 0.62, 0.66] },
+        { c: [[0.05, 0.35, 0], [-1.15, 1.35, 0.15], 0.6, 0.46] },
+        { c: [[0.05, 0.3, 0], [1.45, 0.45, -0.15], 0.6, 0.5] },
+        { c: [[0.2, -0.2, 0], [0.95, -0.55, 0.3], 0.5, 0.36] }
       ],
-      colors: { a: "#141414", b: "#3A3A3A", c: "#0B0B0B", d: "#FF6A2C" }, spotFreq: 5.2, zone: 0.8, glint: 1
+      colors: { a: "#17171A", b: "#7A2CFF", c: "#0C0C0E", d: "#8E45FF" }
     },
     { // 3. «пушистая»: розовый мех с жёлтыми зонами короткого ворса
       kind: "fur", mesh: "nets", k: 0.42, res: 84,
@@ -48,16 +49,19 @@
         { c: [[0, 0, 0], [-0.55, -1.2, -0.2], 0.55, 0.5] },
         { c: [[0, 0, 0], [0.9, -0.9, 0.45], 0.45, 0.42] }
       ],
-      colors: { a: "#FF6A26", b: "#FFD9BF", c: "#FFB13C", d: "#FFFFFF" }, furLen: 0.11, layers: 20
+      colors: { a: "#FF5E1C", b: "#FFB088", c: "#E8452E", d: "#FFFFFF" }, furLen: 0.11, layers: 20
     },
-    { // 4. «петля в панцире»: изогнутая трубка из плиток с белыми швами, оранжевый → жёлтый
-      kind: "beads", mesh: "nets", k: 0.3, res: 110,
+    { // 4. «гроздь»: лаймовая из нескольких шаров, синие скопления гранул и россыпь точек
+      kind: "beads", mesh: "ray", k: 0.36,
       prims: [
-        { p: [[-1.35, -0.75, 0.35, 0.5], [-0.55, -1.05, -0.15, 0.55], [0.45, -0.75, -0.35, 0.55], [1.0, 0.0, 0.15, 0.52],
-              [0.45, 0.65, 0.55, 0.5], [-0.45, 0.85, 0.25, 0.52], [-1.0, 0.35, -0.35, 0.5], [-0.35, -0.15, -0.75, 0.46],
-              [0.75, 0.35, -0.65, 0.5], [1.35, 1.05, -0.15, 0.55]] }
+        { s: [0, 0, 0, 0.8] },
+        { s: [-0.75, 0.6, 0.15, 0.7] },
+        { s: [0.8, 0.55, -0.2, 0.68] },
+        { s: [0.55, -0.7, 0.35, 0.72] },
+        { s: [-0.7, -0.65, -0.2, 0.68] },
+        { s: [0.05, 0.25, 0.75, 0.62] }
       ],
-      colors: { a: "#161616", b: "#383838", c: "#0C0C0C", d: "#FF6A2C" }, spotFreq: 4.6, zone: 0.7, glint: 1
+      colors: { a: "#D6EC62", b: "#3527EE", c: "#C6E052", d: "#FFFFFF" }, spotFreq: 6.5, zone: 0, glint: 0, dots: 1
     },
     { // 5. «кольцо из шаров»: мягкие цветные зоны — сиреневый, оранжевый, белый, жёлтый
       kind: "zones", mesh: "nets", k: 0.32, res: 110,
@@ -70,7 +74,7 @@
         }
         return P;
       })(),
-      pal: ["#F25A1F", "#FFB58A", "#FF7A30", "#FFD3B4", "#FF8A3D", "#FFA36B"]
+      pal: ["#C8360A", "#F25A1F", "#D9440E", "#FF7A2C", "#E54C12", "#FF6A1F"]
     },
     { // 6. «многолапая»: белая в мелком зерне, лаймовые кончики лап
       kind: "tips", mesh: "ray", k: 0.4,
@@ -87,17 +91,17 @@
       ],
       colors: { a: "#151515", b: "#3C3C3C", c: "#222222", d: "#FF6A2C" }, tip: 1.42
     },
-    { // 7. «облако»: оранжевое со светлыми пятнами — финал
-      kind: "beads", mesh: "ray", k: 0.45,
+    { // 7. снова «звезда», как первая — финал
+      kind: "beads", mesh: "ray", k: 0.42,
       prims: [
-        { s: [0, 0.2, 0, 0.9] },
-        { c: [[0, 0.1, 0], [-1.35, 0.3, 0.2], 0.55, 0.55] },
-        { c: [[0, 0.2, 0], [1.2, 0.55, -0.45], 0.6, 0.58] },
-        { c: [[0, 0, 0], [0.1, -1.45, 0.15], 0.6, 0.45] },
-        { c: [[0, 0, 0], [1.05, -0.75, 0.5], 0.5, 0.42] },
-        { s: [-0.35, 0.85, -0.3, 0.6] }
+        { s: [0, 0, 0, 0.82] },
+        { c: [[0, 0, 0], [-1.25, 0.75, 0.1], 0.55, 0.62] },
+        { c: [[0, 0, 0], [1.2, 0.95, -0.25], 0.5, 0.58] },
+        { c: [[0, 0, 0], [-1.05, -1.05, 0.15], 0.55, 0.6] },
+        { c: [[0, 0, 0], [1.05, -1.0, 0.3], 0.52, 0.58] },
+        { c: [[0, 0.3, 0], [0.15, 1.45, 0.35], 0.42, 0.55] }
       ],
-      colors: { a: "#FF7430", b: "#FFD6B8", c: "#FF9A3C", d: "#FFE3A0" }, spotFreq: 3.4, zone: 0.6, glint: 0.7
+      colors: { a: "#F4561C", b: "#FFE6CC", c: "#C9340F", d: "#FFE3A0" }, spotFreq: 4.2, zone: 0.7, glint: 1
     }
   ];
   // трубки через точки раскладываем на капсулы
@@ -268,7 +272,7 @@
   ].join("\n");
   var HEAD = [
     "varying vec3 vOpos; varying vec3 vNm0, vNm1, vNm2;",
-    "uniform float uFreq, uAmp, uSpotFreq, uZone, uGlint, uTip, uLayerMax;",
+    "uniform float uFreq, uAmp, uSpotFreq, uZone, uGlint, uTip, uLayerMax, uDots;",
     "uniform vec3 uColA, uColB, uColC, uColD;",
     "uniform vec3 uPal[6];"
   ].join("\n");
@@ -280,6 +284,7 @@
       "vec3 gp = vOpos * uFreq;",
       "float zone = smoothstep(0.5, 0.58, vn(vOpos * 0.9 + 2.0) * 0.7 + vn(vOpos * 2.3 + 9.0) * 0.3) * uZone;",
       "float spot = smoothstep(0.52, 0.6, vn(vOpos * uSpotFreq) * 0.62 + vn(vOpos * uSpotFreq * 2.4 + 4.0) * 0.38) * (1.0 - zone * 0.85);",
+      "spot = max(spot, step(0.8, vn(vOpos * 26.0 + 3.0)) * uDots);",
       "vec4 bB = bead(gp), bF = bead(gp * 1.7 + 13.0);",
       "vec3 gObj = mix(bF.xyz * 0.45, bB.xyz * 1.25, spot) * uAmp * uFreq;",
       "float ao = mix(bF.w, bB.w, spot);",
@@ -316,9 +321,9 @@
       "vec4 bF = bead(vOpos * uFreq);",
       "vec3 gObj = bF.xyz * 0.35 * uAmp * uFreq;",
       "float ao = mix(0.86, 1.0, bF.w);",
-      "col *= ao;",
+      "col *= ao * 0.62;",
       "float glint = 0.0;",
-      "float rough = 0.62;"
+      "float rough = 0.92;"
     ],
     // белая в мелком зерне, лаймовые кончики лап, сиреневый отлив в тенях
     tips: [
@@ -331,9 +336,29 @@
       "float glint = smoothstep(0.86, 0.9, vn(vOpos * 70.0 + 7.0)) * 0.9;",
       "float rough = 0.55;"
     ],
+    // скорлупа с кратерами: отверстия разного размера, края проседают внутрь, вокруг — тёмные «волокна»,
+    // внутри — светящийся цвет
+    pores: [
+      "float f1, f2; vec3 o1, o2; vec3 cp = vOpos * uFreq; voro(cp, 0.9, f1, f2, o1, o2);",
+      "float id = h31(floor(cp + o1) + 7.1);",
+      "float dens = smoothstep(0.2, 0.75, vn(vOpos * 1.4 + 2.0));",
+      "float r = (0.16 + 0.3 * id * id) * mix(0.55, 1.0, dens) * step(0.15, id);",
+      "float hole = 1.0 - smoothstep(r - 0.012, r, f1);",
+      "float rim = smoothstep(r, r + 0.22, f1);",
+      "vec3 dir = o1 / max(f1, 1e-3);",
+      "float fib = vn(dir * 14.0 + id * 40.0);",
+      "vec4 bF = bead(vOpos * 60.0);",
+      "vec3 gObj = (-dir * (1.0 - rim) * (1.0 - hole) * 1.4) * uAmp * uFreq + bF.xyz * 0.35 * 0.006 * 60.0;",
+      "float ao = mix(0.25 + 0.35 * fib, 1.0, rim * rim) * mix(0.85, 1.03, bF.w);",
+      "float depth = smoothstep(0.0, r * 0.85, r - f1);",            // 0 у края отверстия → 1 в глубине
+      "float lip = smoothstep(r, r + 0.025, f1) * (1.0 - smoothstep(r + 0.03, r + 0.08, f1));",   // светлый бортик
+      "vec3 col = mix(uColA * ao + lip * step(0.001, r) * 0.07, uColB * mix(0.12, 1.0, depth), hole);",
+      "float glint = hole * depth * 0.9;",
+      "float rough = 0.6;"
+    ],
     // основа меха: густой подшёрсток (сами волоски — слоями, см. buildFur)
     furbase: [
-      "float zone = smoothstep(0.48, 0.53, vn(vOpos * 1.1 + 3.0));",
+      "float zone = smoothstep(0.3, 0.75, vn(vOpos * 0.9 + 3.0) * 0.7 + vn(vOpos * 2.2 + 8.0) * 0.3);",
       "vec3 col = mix(uColA * 0.62, uColC * 0.8, zone);",
       "vec3 gObj = vec3(0.0); float ao = 1.0; float glint = 0.0; float rough = 0.95; sheenK = 0.55;"
     ]
@@ -343,13 +368,13 @@
     var c = sh.colors || {};
     function lin(x) { return new THREE.Color(x || "#ffffff").convertSRGBToLinear(); }
     var U = {
-      uFreq: { value: kind === "cells" ? 9 : kind === "zones" ? 70 : kind === "tips" ? 60 : 34 },
-      uAmp: { value: kind === "cells" ? 0.022 : kind === "tips" ? 0.008 : kind === "zones" ? 0.006 : 0.011 },
-      uSpotFreq: { value: sh.spotFreq || 4 }, uZone: { value: sh.zone || 0 }, uGlint: { value: sh.glint || 0 }, uTip: { value: sh.tip || 1.2 }, uLayerMax: { value: 1 },
+      uFreq: { value: kind === "pores" ? 4.2 : kind === "cells" ? 9 : kind === "zones" ? 70 : kind === "tips" ? 60 : 34 },
+      uAmp: { value: kind === "pores" ? 0.045 : kind === "cells" ? 0.022 : kind === "tips" ? 0.008 : kind === "zones" ? 0.006 : 0.011 },
+      uSpotFreq: { value: sh.spotFreq || 4 }, uDots: { value: sh.dots || 0 }, uZone: { value: sh.zone || 0 }, uGlint: { value: sh.glint || 0 }, uTip: { value: sh.tip || 1.2 }, uLayerMax: { value: 1 },
       uColA: { value: lin(c.a) }, uColB: { value: lin(c.b) }, uColC: { value: lin(c.c) }, uColD: { value: lin(c.d) },
       uPal: { value: (sh.pal || ["#fff", "#fff", "#fff", "#fff", "#fff", "#fff"]).map(lin) }
     };
-    var m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5, metalness: 0, envMapIntensity: 0.85 });
+    var m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5, metalness: 0, envMapIntensity: kind === "zones" ? 0.45 : 0.85 });
     m.userData.u = U;
     // у каждого вида поверхности свой шейдер — иначе three.js переиспользует первый собранный
     m.customProgramCacheKey = function () { return "surface-" + kind; };
@@ -399,8 +424,8 @@
         .replace("#include <common>", "#include <common>\nvarying vec3 vOpos; varying float vLayer; uniform float uFreq; uniform vec3 uColA, uColB, uColC;\n" + NOISE)
         .replace("#include <color_fragment>", [
           "#include <color_fragment>",
-          "float zone = smoothstep(0.48, 0.53, vn(vOpos * 1.1 + 3.0));",
-          "float lenF = mix(1.0, 0.32, zone);",           // на жёлтых зонах ворс короткий, как бархат
+          "float zone = smoothstep(0.3, 0.75, vn(vOpos * 0.9 + 3.0) * 0.7 + vn(vOpos * 2.2 + 8.0) * 0.3);",
+          "float lenF = mix(1.0, 0.8, zone);",           // на жёлтых зонах ворс короткий, как бархат
           "if (vLayer > lenF) discard;",
           "float h = vLayer / lenF;",
           "float f1, f2; vec3 o1, o2; voro(vOpos * uFreq, 0.85, f1, f2, o1, o2);",
