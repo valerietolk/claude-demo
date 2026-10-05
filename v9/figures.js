@@ -28,7 +28,7 @@
       ],
       colors: { a: "#F4561C", b: "#FFE6CC", c: "#C9340F", d: "#FFE3A0" }, spotFreq: 4.2, zone: 0.7, glint: 1
     },
-    { // 2. «пористая скорлупа»: ветвистая фигура с кратерами, внутри светится фиолетовый
+    { // 2. «пористая скорлупа»: ветвистая фигура с кратерами-воронками, внутри светится оранжевый
       // (цвет скорлупы — под фон раздела: на чёрном она чёрная)
       kind: "pores", mesh: "ray", k: 0.38,
       prims: [
@@ -37,7 +37,7 @@
         { c: [[0.05, 0.3, 0], [1.45, 0.45, -0.15], 0.6, 0.5] },
         { c: [[0.2, -0.2, 0], [0.95, -0.55, 0.3], 0.5, 0.36] }
       ],
-      colors: { a: "#232327", b: "#7A2CFF", c: "#0C0C0E", d: "#8E45FF" }, holes: 130, seed: 11
+      colors: { a: "#3B3836", b: "#FF6A1F", c: "#0C0C0E", d: "#FF8A3D" }, holes: 230, seed: 11
     },
     { // 3. «пушистая»: розовый мех с жёлтыми зонами короткого ворса
       kind: "fur", mesh: "nets", k: 0.42, res: 84,
@@ -61,7 +61,7 @@
         { s: [-0.7, -0.65, -0.2, 0.68] },
         { s: [0.05, 0.25, 0.75, 0.62] }
       ],
-      colors: { a: "#161616", b: "#FF5A1F", c: "#0E0E0E", d: "#FF7A30" }, spotFreq: 6.5, zone: 0, glint: 1, dots: 1
+      colors: { a: "#161616", b: "#FF5A1F", c: "#0E0E0E", d: "#FF7A30" }, spotFreq: 6.5, zone: 0, glint: 1, dots: 0.5, spotCut: 0.545
     },
     { // 5. «кольцо из шаров»: мягкие цветные зоны — сиреневый, оранжевый, белый, жёлтый
       kind: "zones", mesh: "nets", k: 0.32, res: 110,
@@ -146,7 +146,7 @@
 
   // «звёздная» фигура: из центра по каждому направлению ищем поверхность
   function buildRay(shape) {
-    var geo = shape.kind === "pores" ? new THREE.SphereGeometry(1, 340, 220) : new THREE.SphereGeometry(1, 220, 140);
+    var geo = shape.kind === "pores" ? new THREE.SphereGeometry(1, 460, 300) : new THREE.SphereGeometry(1, 220, 140);
     var pos = geo.attributes.position, n = pos.count, nor = new Float32Array(n * 3), v = new THREE.Vector3(), g = [0, 0, 0];
     for (var i = 0; i < n; i++) {
       v.fromBufferAttribute(pos, i).normalize();
@@ -248,50 +248,58 @@
     var pos = geo.attributes.position, nor = geo.attributes.normal, n = pos.count;
     var rnd = (function (a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; })(sh.seed || 11);
     var holes = [], tries = 0, P = new THREE.Vector3(), N = new THREE.Vector3(), T = new THREE.Vector3(), B = new THREE.Vector3();
-    while (holes.length < (sh.holes || 120) && tries++ < 4000) {
+    // где-то отверстия гуще, где-то реже — как на референсе
+    function dens(p) { return 0.5 + 0.5 * Math.sin(p.x * 2.1 + 1.3) * Math.sin(p.y * 1.7 - 0.4) * Math.cos(p.z * 2.3 + 0.8); }
+    while (holes.length < (sh.holes || 200) && tries++ < 9000) {
       var i = Math.floor(rnd() * n);
       P.fromBufferAttribute(pos, i); N.fromBufferAttribute(nor, i).normalize();
-      // крупные отверстия реже, мелкие чаще; некоторые вытянутые, как на референсе
-      var r = 0.055 + 0.16 * Math.pow(rnd(), 2.4);
+      if (rnd() > 0.35 + 0.65 * dens(P)) continue;
+      // много мелких, меньше средних, единицы крупных; крупные бывают вытянутыми
+      var u = rnd(), r = u < 0.55 ? 0.035 + 0.03 * rnd() : u < 0.9 ? 0.065 + 0.05 * rnd() : 0.12 + 0.09 * rnd();
       var ok = true;
-      for (var k = 0; k < holes.length; k++) if (holes[k].p.distanceTo(P) < (holes[k].r + r) * 1.15) { ok = false; break; }
+      for (var k = 0; k < holes.length; k++) if (holes[k].p.distanceTo(P) < (holes[k].r * holes[k].ax + r) * 1.35) { ok = false; break; }
       if (!ok) continue;
       T.set(rnd() - .5, rnd() - .5, rnd() - .5).cross(N).normalize(); B.crossVectors(N, T);
-      holes.push({ p: P.clone(), n: N.clone(), t: T.clone(), b: B.clone(), r: r, ax: 1 + (r > 0.11 ? rnd() * 0.9 : rnd() * 0.3) });
+      holes.push({ p: P.clone(), n: N.clone(), t: T.clone(), b: B.clone(), r: r, ax: 1 + (r > 0.1 ? rnd() * 1.1 : rnd() * 0.35) });
     }
-    var aHole = new Float32Array(n * 3), v = new THREE.Vector3(), d = new THREE.Vector3(), vn = new THREE.Vector3();
+    // aHole: x, y — положение внутри кратера (в долях радиуса), z — глубина 0…1, w — радиус
+    // aDir: направление «от центра кратера» в координатах фигуры — по нему идут волокна
+    var aHole = new Float32Array(n * 4), aDir = new Float32Array(n * 3), v = new THREE.Vector3(), d = new THREE.Vector3(), rd = new THREE.Vector3();
     for (i = 0; i < n; i++) {
       v.fromBufferAttribute(pos, i);
       var best = null, bq = 9, bx = 0, by = 0;
       for (k = 0; k < holes.length; k++) {
         var h = holes[k]; d.subVectors(v, h.p);
-        if (d.lengthSq() > h.r * h.r * 4.2 * h.ax * h.ax) continue;
+        var R = h.r * h.ax * 1.9;
+        if (d.x * d.x + d.y * d.y + d.z * d.z > R * R) continue;
         var x = d.dot(h.t) / (h.r * h.ax), y = d.dot(h.b) / h.r, q = Math.sqrt(x * x + y * y);
         if (q < bq) { bq = q; best = h; bx = x; by = y; }
       }
-      aHole[i * 3] = 9; aHole[i * 3 + 1] = 0; aHole[i * 3 + 2] = 0;
-      if (!best || bq > 1.8) continue;
-      vn.fromBufferAttribute(nor, i);
-      var depth = 0;
-      if (bq < 1) depth = 1 - Math.pow(Math.max(0, (bq - 0.62) / 0.38), 2);        // крутые стенки и плоское дно
-      var push = depth * best.r * 0.95 - (bq > 0.95 && bq < 1.45 ? Math.sin((bq - 0.95) / 0.5 * Math.PI) * best.r * 0.06 : 0);
-      v.addScaledVector(best.n, -push);
+      aHole[i * 4] = 9; aHole[i * 4 + 1] = 0; aHole[i * 4 + 2] = 0; aHole[i * 4 + 3] = 0;
+      if (!best || bq > 1.85) continue;
+      // воронка: плавный спуск от края, крутая горловина, тёмная глубина
+      var depth = bq < 1.25 ? Math.pow(1 - Math.min(1, Math.max(0, (bq - 0.18) / 1.07)), 1.7) : 0;
+      var lip = bq > 1.1 && bq < 1.7 ? Math.sin((bq - 1.1) / 0.6 * Math.PI) * 0.05 : 0;   // чуть приподнятый венчик
+      v.addScaledVector(best.n, -(depth * 1.35 - lip) * best.r);
       pos.setXYZ(i, v.x, v.y, v.z);
-      aHole[i * 3] = bx; aHole[i * 3 + 1] = by; aHole[i * 3 + 2] = depth;
+      aHole[i * 4] = bx; aHole[i * 4 + 1] = by; aHole[i * 4 + 2] = depth; aHole[i * 4 + 3] = best.r;
+      rd.copy(best.t).multiplyScalar(bx).addScaledVector(best.b, by).normalize();
+      aDir[i * 3] = rd.x; aDir[i * 3 + 1] = rd.y; aDir[i * 3 + 2] = rd.z;
     }
-    // нормали: снаружи кратеров — гладкие (от формы), внутри — пересчитанные по новой сетке
     var smooth = new Float32Array(nor.array);
     geo.computeVertexNormals();
     var cn = geo.attributes.normal;
     for (i = 0; i < n; i++) {
-      var q2 = Math.sqrt(aHole[i * 3] * aHole[i * 3] + aHole[i * 3 + 1] * aHole[i * 3 + 1]);
-      var w = 1 - Math.min(1, Math.max(0, (q2 - 1.0) / 0.5));
+      var q2 = Math.sqrt(aHole[i * 4] * aHole[i * 4] + aHole[i * 4 + 1] * aHole[i * 4 + 1]);
+      var w = 1 - Math.min(1, Math.max(0, (q2 - 1.3) / 0.5));
       var x2 = smooth[i * 3] * (1 - w) + cn.getX(i) * w, y2 = smooth[i * 3 + 1] * (1 - w) + cn.getY(i) * w, z2 = smooth[i * 3 + 2] * (1 - w) + cn.getZ(i) * w;
       var l = Math.sqrt(x2 * x2 + y2 * y2 + z2 * z2) || 1;
       cn.setXYZ(i, x2 / l, y2 / l, z2 / l);
     }
-    geo.setAttribute("aHole", new THREE.BufferAttribute(aHole, 3));
+    geo.setAttribute("aHole", new THREE.BufferAttribute(aHole, 4));
+    geo.setAttribute("aDir", new THREE.BufferAttribute(aDir, 3));
   }
+
 
   function buildGeometry(shape) {
     var geo = shape.mesh === "nets" ? buildNets(shape) : buildRay(shape);
@@ -324,8 +332,8 @@
     "  return vec4(2.2 * o1 / max(s, 0.18) * step(0.001, s) * edge, s * edge); }"
   ].join("\n");
   var HEAD = [
-    "varying vec3 vOpos; varying vec3 vNm0, vNm1, vNm2; varying vec3 vHole;",
-    "uniform float uFreq, uAmp, uSpotFreq, uZone, uGlint, uTip, uLayerMax, uDots;",
+    "varying vec3 vOpos; varying vec3 vNm0, vNm1, vNm2; varying vec4 vHole; varying vec3 vDir;",
+    "uniform float uFreq, uAmp, uSpotFreq, uZone, uGlint, uTip, uLayerMax, uDots, uSpotCut;",
     "uniform vec3 uColA, uColB, uColC, uColD;",
     "uniform vec3 uPal[6];"
   ].join("\n");
@@ -336,8 +344,8 @@
     beads: [
       "vec3 gp = vOpos * uFreq;",
       "float zone = smoothstep(0.5, 0.58, vn(vOpos * 0.9 + 2.0) * 0.7 + vn(vOpos * 2.3 + 9.0) * 0.3) * uZone;",
-      "float spot = smoothstep(0.52, 0.6, vn(vOpos * uSpotFreq) * 0.62 + vn(vOpos * uSpotFreq * 2.4 + 4.0) * 0.38) * (1.0 - zone * 0.85);",
-      "spot = max(spot, step(0.8, vn(vOpos * 26.0 + 3.0)) * uDots);",
+      "float spot = smoothstep(uSpotCut, uSpotCut + 0.08, vn(vOpos * uSpotFreq) * 0.62 + vn(vOpos * uSpotFreq * 2.4 + 4.0) * 0.38) * (1.0 - zone * 0.85);",
+      "spot = max(spot, step(0.8 + 0.06 * (1.0 - uDots), vn(vOpos * 26.0 + 3.0)) * step(0.01, uDots));",
       "vec4 bB = bead(gp), bF = bead(gp * 1.7 + 13.0);",
       "vec3 gObj = mix(bF.xyz * 0.45, bB.xyz * 1.25, spot) * uAmp * uFreq;",
       "float ao = mix(bF.w, bB.w, spot);",
@@ -392,20 +400,40 @@
     // скорлупа с кратерами: отверстия разного размера, края проседают внутрь, вокруг — тёмные «волокна»,
     // внутри — светящийся цвет
     pores: [
-      // q — где мы относительно своего кратера: <1 внутри, 1 — край, >1 снаружи
-      "float q = length(vHole.xy); float dep = vHole.z; float ang = atan(vHole.y, vHole.x);",
-      // тонкие радиальные волокна вокруг отверстий и по стенкам
-      "float fib = pow(0.5 + 0.5 * sin(ang * 64.0 + vn(vec3(ang * 5.0, q * 3.0, 2.0)) * 7.0), 3.0);",
-      "float ring = (1.0 - smoothstep(0.6, 1.0, q)) * step(q, 8.0);",          // стенки и дно
-      "float halo = smoothstep(0.95, 1.0, q) * (1.0 - smoothstep(1.0, 1.55, q));", // венчик снаружи
-      "vec4 bF = bead(vOpos * 60.0);",
-      "vec3 gObj = bF.xyz * 0.35 * 0.006 * 60.0 * (1.0 - ring);",
-      "float ao = mix(0.9, 1.04, bF.w) * (1.0 - halo * fib * 0.35);",
-      "vec3 shell = uColA * ao + uColB * halo * fib * 0.22;",
-      "vec3 inner = uColB * mix(0.25, 1.0, dep) * mix(0.75, 1.1, fib);",
-      "vec3 col = mix(shell, inner, ring);",
-      "float glint = ring * dep * 0.6;",
-      "float rough = mix(0.62, 0.85, ring);"
+      // q — где мы относительно кратера (<1 внутри); dep — глубина; ang — угол вокруг центра
+      "float q = length(vHole.xy); float dep = vHole.z; float hr = vHole.w; float ang = atan(vHole.y, vHole.x);",
+      "float inH = 1.0 - smoothstep(1.25, 1.8, q);",
+      // тонкие радиальные волокна: чем крупнее кратер, тем их больше; к центру они сходятся и темнеют
+      "float nf = floor(clamp(hr * 420.0, 22.0, 90.0));",
+      "float w = ang * nf + (vn(vec3(ang * 3.0, q * 2.0, hr * 50.0)) - 0.5) * 4.0;",
+      "float fib = 0.5 + 0.5 * sin(w) * clamp(1.0 - fwidth(w) / 2.5, 0.0, 1.0);",   // без ряби на мелких кратерах
+      "float fibMask = smoothstep(0.15, 0.55, q) * (1.0 - smoothstep(1.05, 1.6, q)) * inH;",
+      // мелкие поры между кратерами — только шейдером
+      "float pf1, pf2; vec3 po1, po2; voro(vOpos * 26.0, 0.9, pf1, pf2, po1, po2);",
+      "float pid = h31(floor(vOpos * 26.0 + po1) + 3.3);",
+      "float pr = (0.12 + 0.2 * pid) * step(0.45, pid) * smoothstep(0.35, 0.65, vn(vOpos * 2.2 + 4.0)) * (1.0 - inH);",
+      "float pore = 1.0 - smoothstep(pr * 0.55, pr, pf1);",
+      "float poreRim = (1.0 - smoothstep(pr, pr * 1.9, pf1)) * (1.0 - pore) * step(0.001, pr);",
+      // зерно скорлупы: два слоя гранул разного размера
+      "vec4 g1 = bead(vOpos * 95.0), g2 = bead(vOpos * 170.0 + 7.0);",
+      "vec3 tang = normalize(cross(vDir, vOpos) + 1e-4);",
+      "vec3 gObj = (g1.xyz * 0.55 + g2.xyz * 0.35) * 0.0045 * 95.0 * (1.0 - fibMask * 0.6)",
+      "          + vDir * cos(w) * fibMask * 0.25 - normalize(po1 + 1e-4) * poreRim * 0.6;",
+      "float ao = mix(0.78, 1.04, g1.w * 0.6 + g2.w * 0.4);",
+      "ao *= mix(1.0, mix(0.55, 1.0, fib), fibMask);",                    // бороздки волокон
+      "ao *= mix(1.0, 0.18, smoothstep(0.25, 0.95, dep));",                  // глубина темнеет
+      "ao *= 1.0 - poreRim * 0.45;",
+      "vec3 shell = uColA * ao;",
+      // дно светится оранжевым; на стенки ложится тёплый отсвет; мелкие поры — тёмные с искрой внутри
+      "float throat = (1.0 - smoothstep(0.1, 0.42, q)) * inH;",
+      "float bounce = (1.0 - smoothstep(0.3, 0.95, q)) * inH;",
+      "float spark = 1.0 - smoothstep(0.0, pr * 0.35, pf1);",
+      "vec3 col = shell + uColB * bounce * ao * 0.35;",
+      "col = mix(col, uColB * mix(0.55, 1.0, 1.0 - q / 0.42), throat);",
+      "col = mix(col, uColA * 0.12, pore);",
+      "glow = uColB * (throat * 0.8 + bounce * ao * 0.12 + pore * spark * step(0.001, pr) * 0.6);",
+      "float glint = 0.0;",
+      "float rough = mix(0.7, 0.9, fibMask);"
     ],
     // основа меха: густой подшёрсток (сами волоски — слоями, см. buildFur)
     furbase: [
@@ -421,7 +449,7 @@
     var U = {
       uFreq: { value: kind === "pores" ? 4.2 : kind === "cells" ? 9 : kind === "zones" ? 70 : kind === "tips" ? 60 : 34 },
       uAmp: { value: kind === "pores" ? 0.045 : kind === "cells" ? 0.022 : kind === "tips" ? 0.008 : kind === "zones" ? 0.006 : 0.011 },
-      uSpotFreq: { value: sh.spotFreq || 4 }, uDots: { value: sh.dots || 0 }, uZone: { value: sh.zone || 0 }, uGlint: { value: sh.glint || 0 }, uTip: { value: sh.tip || 1.2 }, uLayerMax: { value: 1 },
+      uSpotFreq: { value: sh.spotFreq || 4 }, uDots: { value: sh.dots || 0 }, uSpotCut: { value: sh.spotCut || 0.52 }, uZone: { value: sh.zone || 0 }, uGlint: { value: sh.glint || 0 }, uTip: { value: sh.tip || 1.2 }, uLayerMax: { value: 1 },
       uColA: { value: lin(c.a) }, uColB: { value: lin(c.b) }, uColC: { value: lin(c.c) }, uColD: { value: lin(c.d) },
       uPal: { value: (sh.pal || ["#fff", "#fff", "#fff", "#fff", "#fff", "#fff"]).map(lin) }
     };
@@ -429,18 +457,19 @@
     m.userData.u = U;
     // у каждого вида поверхности свой шейдер — иначе three.js переиспользует первый собранный
     m.customProgramCacheKey = function () { return "surface-" + kind; };
+    m.extensions = { derivatives: true };
     m.onBeforeCompile = function (s) {
       for (var k in U) s.uniforms[k] = U[k];
       s.vertexShader = s.vertexShader
-        .replace("#include <common>", "#include <common>\nattribute vec3 opos; attribute vec3 aHole;\nvarying vec3 vOpos; varying vec3 vNm0, vNm1, vNm2; varying vec3 vHole;")
-        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvOpos = opos; vHole = aHole; vNm0 = normalMatrix[0]; vNm1 = normalMatrix[1]; vNm2 = normalMatrix[2];");
+        .replace("#include <common>", "#include <common>\nattribute vec3 opos; attribute vec4 aHole; attribute vec3 aDir;\nvarying vec3 vOpos; varying vec3 vNm0, vNm1, vNm2; varying vec4 vHole; varying vec3 vDir;")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvOpos = opos; vHole = aHole; vDir = aDir; vNm0 = normalMatrix[0]; vNm1 = normalMatrix[1]; vNm2 = normalMatrix[2];");
       s.fragmentShader = s.fragmentShader
         .replace("#include <common>", "#include <common>\n" + HEAD + "\n" + NOISE)
-        .replace("#include <color_fragment>", "#include <color_fragment>\nfloat sheenK = 0.0;\n" + KINDS[kind].join("\n") +
+        .replace("#include <color_fragment>", "#include <color_fragment>\nfloat sheenK = 0.0; vec3 glow = vec3(0.0);\n" + KINDS[kind].join("\n") +
           "\ndiffuseColor.rgb *= col;\ndiffuseColor.rgb = mix(diffuseColor.rgb, uColD, glint);")
         .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = mix(rough, 0.22, glint);")
         .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.35, glint);")
-        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += uColD * glint * 0.35;\n" +
+        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += uColD * glint * 0.35 + glow;\n" +
           // бархат: мягкий светлый отсвет по краю силуэта, как у ворса
           "totalEmissiveRadiance += mix(uColA, vec3(1.0), 0.6) * sheenK * pow(1.0 - abs(dot(normal, normalize(vViewPosition))), 2.5);")
         .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\nvec3 gV = mat3(vNm0, vNm1, vNm2) * gObj; gV -= dot(gV, normal) * normal;\nnormal = normalize(normal - gV * (gl_FrontFacing ? 1.0 : -1.0));");
