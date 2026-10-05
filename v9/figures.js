@@ -28,16 +28,16 @@
       ],
       colors: { a: "#F4561C", b: "#FFE6CC", c: "#C9340F", d: "#FFE3A0" }, spotFreq: 4.2, zone: 0.7, glint: 1
     },
-    { // 2. «панцирь»: чёрные выпуклые плитки, между ними — оранжевые швы
+    { // 2. «мох»: чёрная матовая фигура, по ней пятнами и россыпью растёт оранжевый мох из крошечных гранул
       // (цвет скорлупы — под фон раздела: на чёрном она чёрная)
-      kind: "cells", mesh: "ray", k: 0.38,
+      kind: "beads", mesh: "ray", k: 0.38, moss: "#FF4F10",
       prims: [
         { c: [[0.05, -1.45, 0.1], [0.05, 0.35, 0], 0.62, 0.66] },
         { c: [[0.05, 0.35, 0], [-1.15, 1.35, 0.15], 0.6, 0.46] },
         { c: [[0.05, 0.3, 0], [1.45, 0.45, -0.15], 0.6, 0.5] },
         { c: [[0.2, -0.2, 0], [0.95, -0.55, 0.3], 0.5, 0.36] }
       ],
-      colors: { a: "#1A1919", b: "#2E2A27", c: "#FF6A1F", d: "#3A2418" }
+      colors: { a: "#161515", b: "#1E1C1B", c: "#121111", d: "#FF7A30" }, spotFreq: 3.0, spotCut: 0.5, zone: 0, glint: 0, dots: 0
     },
     { // 3. «пушистая»: розовый мех с жёлтыми зонами короткого ворса
       kind: "fur", mesh: "nets", k: 0.42, res: 84,
@@ -531,6 +531,53 @@
     return fur;
   }
 
+  // мох: на поверхности выращиваем крошечные шарики — плотными пятнами и редкой россыпью вокруг
+  function jsNoise(x, y, z) {
+    function h(a, b, c) { var t = Math.sin(a * 127.1 + b * 311.7 + c * 74.7) * 43758.5453; return t - Math.floor(t); }
+    var ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z), fx = x - ix, fy = y - iy, fz = z - iz;
+    fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy); fz = fz * fz * (3 - 2 * fz);
+    function L(a, b, t) { return a + (b - a) * t; }
+    return L(L(L(h(ix, iy, iz), h(ix + 1, iy, iz), fx), L(h(ix, iy + 1, iz), h(ix + 1, iy + 1, iz), fx), fy),
+             L(L(h(ix, iy, iz + 1), h(ix + 1, iy, iz + 1), fx), L(h(ix, iy + 1, iz + 1), h(ix + 1, iy + 1, iz + 1), fx), fy), fz);
+  }
+  function buildMoss(sh, geo) {
+    var pos = geo.attributes.position, nor = geo.attributes.normal, n = pos.count;
+    var a = 77, rnd = function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    var P = new THREE.Vector3(), N = new THREE.Vector3(), T = new THREE.Vector3(), B = new THREE.Vector3(), Q = new THREE.Vector3();
+    var list = [], idx = geo.index.array, tris = idx.length / 3, A = new THREE.Vector3(), Bv = new THREE.Vector3(), Cv = new THREE.Vector3();
+    var Na = new THREE.Vector3(), Nb = new THREE.Vector3(), Nc = new THREE.Vector3();
+    // случайные точки по треугольникам — без полос от сетки
+    for (var k = 0; k < 90000; k++) {
+      var t = Math.floor(rnd() * tris) * 3, w1 = rnd(), w2 = rnd();
+      if (w1 + w2 > 1) { w1 = 1 - w1; w2 = 1 - w2; }
+      var w0 = 1 - w1 - w2;
+      A.fromBufferAttribute(pos, idx[t]); Bv.fromBufferAttribute(pos, idx[t + 1]); Cv.fromBufferAttribute(pos, idx[t + 2]);
+      P.set(0, 0, 0).addScaledVector(A, w0).addScaledVector(Bv, w1).addScaledVector(Cv, w2);
+      var m = jsNoise(P.x * 4.5, P.y * 4.5, P.z * 4.5) * 0.55 + jsNoise(P.x * 11 + 5, P.y * 11, P.z * 11) * 0.45;
+      var dense = Math.min(1, Math.max(0, (m - 0.58) / 0.08));           // плотные пятна мха
+      var halo = Math.min(1, Math.max(0, (m - 0.46) / 0.12)) * (1 - dense); // россыпь вокруг
+      var take = rnd() < dense * 0.9 || rnd() < halo * 0.18 + 0.012;
+      if (!take) continue;
+      Na.fromBufferAttribute(nor, idx[t]); Nb.fromBufferAttribute(nor, idx[t + 1]); Nc.fromBufferAttribute(nor, idx[t + 2]);
+      N.set(0, 0, 0).addScaledVector(Na, w0).addScaledVector(Nb, w1).addScaledVector(Nc, w2).normalize();
+      var r = dense > 0.5 ? 0.007 + 0.02 * Math.pow(rnd(), 1.8) : 0.004 + 0.009 * rnd();
+      Q.copy(P).addScaledVector(N, r * (0.15 + 0.45 * rnd()));
+      list.push(Q.x, Q.y, Q.z, r);
+    }
+    var count = list.length / 4;
+    var g = new THREE.IcosahedronGeometry(1, 1);
+    var mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(sh.moss), roughness: 0.42, metalness: 0, envMapIntensity: 0.9 });
+    var mesh = new THREE.InstancedMesh(g, mat, count);
+    var M = new THREE.Matrix4(), S = new THREE.Vector3(), Rq = new THREE.Quaternion(), C = new THREE.Color();
+    for (var i = 0; i < count; i++) {
+      Q.set(list[i * 4], list[i * 4 + 1], list[i * 4 + 2]); S.setScalar(list[i * 4 + 3]);
+      M.compose(Q, Rq, S); mesh.setMatrixAt(i, M);
+      C.set(sh.moss).offsetHSL((rnd() - 0.5) * 0.03, 0, (rnd() - 0.5) * 0.12); mesh.setColorAt(i, C);
+    }
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    return mesh;
+  }
+
   // ---------- «комната» со светом: окружение для бликов ----------
   function buildEnv(renderer) {
     var env = new THREE.Scene();
@@ -619,6 +666,7 @@
     mesh.castShadow = mesh.receiveShadow = true;
     holder.add(mesh);
     if (sh.kind === "fur") { var fur = buildFur(sh, geo); holder.add(fur); f.fur = fur; }
+    if (sh.moss) holder.add(buildMoss(sh, geo));
     holder.visible = false;
     scene.add(holder);
     f.holder = holder; f.mesh = mesh;
