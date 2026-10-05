@@ -94,13 +94,7 @@ body{
   position:relative; box-shadow:0 0 28px 5px rgba(255,58,30,.55), 0 8px 24px rgba(160,30,0,.14);
   transition:transform .5s var(--ease-out), box-shadow .5s var(--ease-out); }
 .doc .callout:hover{ transform:translateY(-2px); box-shadow:0 0 40px 9px rgba(255,58,30,.65), 0 14px 32px rgba(160,30,0,.18); }
-@property --trace{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
-.doc .callout::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:2px; pointer-events:none;
-  background:conic-gradient(from 200deg, #E5341A var(--trace), transparent 0);
-  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
-  mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  transition:--trace 1.2s cubic-bezier(.45,0,.2,1); }
-.doc .callout:hover::before{ --trace:360deg; }
+
 .doc .fact, .doc .warn, .doc .note{ padding-left:16px; border-left:2px solid var(--ink); }
 .doc .note, .doc .when-not{ color:var(--ink-soft); }
 .doc .aside{ color:rgba(255,255,255,.72); }
