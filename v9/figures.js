@@ -48,7 +48,7 @@
         { c: [[0, 0, 0], [-0.55, -1.2, -0.2], 0.55, 0.5] },
         { c: [[0, 0, 0], [0.9, -0.9, 0.45], 0.45, 0.42] }
       ],
-      colors: { a: "#F08A7E", b: "#FFF0EA", c: "#FFD23C", d: "#FFFFFF" }, furLen: 0.075, layers: 14
+      colors: { a: "#FF6A26", b: "#FFD9BF", c: "#FFB13C", d: "#FFFFFF" }, furLen: 0.11, layers: 20
     },
     { // 4. «петля в панцире»: изогнутая трубка из плиток с белыми швами, оранжевый → жёлтый
       kind: "beads", mesh: "nets", k: 0.3, res: 110,
@@ -377,7 +377,7 @@
   function buildFur(sh, geo) {
     var L = sh.layers || 24, c = sh.colors;
     function lin(x) { return new THREE.Color(x).convertSRGBToLinear(); }
-    var U = { uLen: { value: sh.furLen || 0.15 }, uFreq: { value: 46 }, uColA: { value: lin(c.a) }, uColB: { value: lin(c.b) }, uColC: { value: lin(c.c) } };
+    var U = { uLen: { value: sh.furLen || 0.15 }, uFreq: { value: 56 }, uBend: { value: new THREE.Vector3() }, uColA: { value: lin(c.a) }, uColB: { value: lin(c.b) }, uColC: { value: lin(c.c) } };
     var g = geo.clone();
     var layer = new Float32Array(L);
     for (var i = 0; i < L; i++) layer[i] = (i + 1) / L;
@@ -387,13 +387,13 @@
     m.onBeforeCompile = function (s) {
       for (var k in U) s.uniforms[k] = U[k];
       s.vertexShader = s.vertexShader
-        .replace("#include <common>", "#include <common>\nattribute vec3 opos; attribute float layer; varying vec3 vOpos; varying float vLayer; uniform float uLen;\n" + NOISE)
+        .replace("#include <common>", "#include <common>\nattribute vec3 opos; attribute float layer; varying vec3 vOpos; varying float vLayer; uniform float uLen; uniform vec3 uBend;\n" + NOISE)
         .replace("#include <begin_vertex>", [
           "#include <begin_vertex>",
           "vOpos = opos; vLayer = layer;",
           // волоски растут по нормали и чуть «причёсаны» в разные стороны, к кончикам сильнее
           "vec3 comb = vec3(vn(opos * 1.7), vn(opos * 1.7 + 7.0), vn(opos * 1.7 + 13.0)) - 0.5;",
-          "transformed += objectNormal * layer * uLen + comb * layer * layer * uLen * 1.1;"
+          "transformed += objectNormal * layer * uLen + comb * layer * layer * uLen * 0.9 + uBend * layer * layer * uLen;"
         ].join("\n"));
       s.fragmentShader = s.fragmentShader
         .replace("#include <common>", "#include <common>\nvarying vec3 vOpos; varying float vLayer; uniform float uFreq; uniform vec3 uColA, uColB, uColC;\n" + NOISE)
@@ -410,6 +410,7 @@
         ].join("\n"));
     };
     var fur = new THREE.InstancedMesh(g, m, L);
+    fur.userData.bend = U.uBend;
     var id = new THREE.Matrix4();
     for (i = 0; i < L; i++) fur.setMatrixAt(i, id);
     fur.frustumCulled = false;
@@ -503,7 +504,7 @@
     var mesh = new THREE.Mesh(geo, surfaceMaterial(sh, sh.kind === "fur" ? "furbase" : sh.kind));
     mesh.castShadow = mesh.receiveShadow = true;
     holder.add(mesh);
-    if (sh.kind === "fur") holder.add(buildFur(sh, geo));
+    if (sh.kind === "fur") { var fur = buildFur(sh, geo); holder.add(fur); f.fur = fur; }
     holder.visible = false;
     scene.add(holder);
     f.holder = holder; f.mesh = mesh;
@@ -526,7 +527,7 @@
     camera.updateProjectionMatrix();
   }
 
-  var _e = new THREE.Euler();
+  var _e = new THREE.Euler(), _w = new THREE.Vector3(), _qi = new THREE.Quaternion();
   function render(i, c, dt, zoom) {
     dt = Math.min(0.1, dt || 0.016);
     clock += dt;
@@ -555,6 +556,12 @@
     floorShadow.scale.set(s, s * 0.8, 1);
     floorShadow.material.opacity = 0.2 - 0.04 * bob;
 
+    if (f.fur) {
+      _w.set(mouse.sx * 1.4 + clamp(spin.vy, -2, 2) * 0.5, -mouse.sy * 1.4 - clamp(spin.vx, -2, 2) * 0.4, 0.3);
+      _qi.copy(h.quaternion).invert();
+      _w.applyQuaternion(_qi);
+      f.fur.userData.bend.value.lerp(_w, 1 - Math.exp(-dt * 5));
+    }
     lights.key.target.position.copy(h.position);
     lights.key.position.set(h.position.x - 3, h.position.y + 5, h.position.z + 4.5);
     renderer.render(scene, camera);

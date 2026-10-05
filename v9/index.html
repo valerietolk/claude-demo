@@ -16,11 +16,11 @@
   font-display:swap;
 }
 :root{
-  --ink:#1f0d04;
+  --ink:#0B0F19;
   /* весь текст — одним цветом (так проще править) */
   --ink-soft:var(--ink);
   --ink-faint:var(--ink);
-  --rule:rgba(31,13,4,.16);
+  --rule:rgba(11,15,25,.16);
   --glass:rgba(255,236,214,.26);
   --orange:#FF7645;
   --amber:#FDBC57;
@@ -62,7 +62,7 @@ body{
 /* ---------- контент глав ---------- */
 .content{ position:relative; z-index:2; padding:8vh 0 30vh; }
 .chapter{
-  width:min(864px, calc(100% - 32px));
+  width:min(864px, calc(100% - clamp(16px, 9vw, 150px) - 96px));
   margin:0 0 0 clamp(16px, 9vw, 150px);
   padding:16vh 0 4vh;
 }
@@ -77,7 +77,7 @@ body{
 .doc > * + *, .doc .card > * + *{ margin-top:14px; }
 .doc h1 + *{ margin-top:22px; }
 .doc h3 + *, .doc h4 + *{ margin-top:12px; }
-.doc strong{ font-weight:400; }
+.doc strong{ font-weight:600; }
 .doc b.key{ font-weight:600; }
 .doc a{ color:inherit; text-underline-offset:3px; }
 .doc s{ color:var(--ink-faint); }
@@ -89,13 +89,17 @@ body{
 .doc blockquote{ padding:14px 18px; border-radius:16px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
 .doc blockquote p{ font-size:clamp(15px, 1.1vw, 17px); }
 .doc .tag{ display:inline-block; margin-left:6px; padding:0 9px; border-radius:999px; box-shadow:inset 0 0 0 1px var(--rule); font-size:12px; line-height:1.8; color:var(--ink-soft); white-space:nowrap; vertical-align:2px; }
+.doc .callout{ padding:18px 22px; border-radius:18px; font-weight:500; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
+  box-shadow:inset 3px 0 0 var(--ink); }
 .doc .fact, .doc .warn, .doc .note{ padding-left:16px; border-left:2px solid var(--ink); }
 .doc .note, .doc .when-not{ color:var(--ink-soft); }
 .doc .aside{ color:rgba(255,255,255,.72); }
 .doc aside.draft, .doc p.draft{ display:block; padding:12px 16px; border-radius:12px; border:1px dashed var(--ink-faint); color:var(--ink-soft); font-size:14px; font-style:italic; }
 .doc aside.draft::before{ content:"черновик · "; font-style:normal; font-weight:400; }
 .doc .draft-inline{ color:var(--ink-soft); font-style:italic; }
-.doc .cards, .doc .groups{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; }
+.doc .cards, .doc .groups{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+@media (min-width: 1440px){ .doc .cards{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 560px){ .doc .cards, .doc .groups{ grid-template-columns:1fr; } }
 .doc .card, .doc .groups > div{ padding:20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 .doc .card h3{ margin:0; padding:0; border:0; font-size:24px; font-weight:700; letter-spacing:-.02em; }
 .doc .card h4{ margin:0; font-size:20px; }
@@ -162,7 +166,7 @@ body{
   .dot{ width:20px; height:15px; }
   .dot span{ display:none; }
   .toc{ right:14px; }
-  .chapter{ width:calc(100% - 52px); margin:0 0 0 16px; padding-top:12vh; }
+  .chapter{ width:calc(100% - 60px); margin:0 0 0 16px; padding-top:12vh; }
   .chapter--final{ width:100%; margin:0; padding:0; }
   .doc .compare{ grid-template-columns:1fr; }
 }
@@ -320,8 +324,8 @@ body{
     theme.setAttribute("content", hex(mix(a.bg[2], b.bg[2], blend)));
     document.documentElement.style.setProperty("--accent", hex(mix(a.accent, b.accent, blend)));
     var d = smooth(clamp(((a.dark || 0) + ((b.dark || 0) - (a.dark || 0)) * blend - 0.4) / 0.2, 0, 1)), root = document.documentElement.style;
-    root.setProperty("--ink", hex(mix("#1F0D04", "#F5F2EE", d)));
-    root.setProperty("--rule", css(mix("rgba(31,13,4,.16)", "rgba(255,255,255,.16)", d)));
+    root.setProperty("--ink", hex(mix("#0B0F19", "#F5F2EE", d)));
+    root.setProperty("--rule", css(mix("rgba(11,15,25,.16)", "rgba(255,255,255,.16)", d)));
     root.setProperty("--glass", css(mix("rgba(255,236,214,.26)", "rgba(255,255,255,.07)", d)));
     root.setProperty("--panel", css(mix("rgba(255,255,255,.5)", "rgba(28,28,28,.6)", d)));
     FIG.bounce(hex(mix(a.bounce, b.bounce, blend)));
