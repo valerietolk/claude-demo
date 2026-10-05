@@ -28,7 +28,7 @@
       ],
       colors: { a: "#F4561C", b: "#FFE6CC", c: "#C9340F", d: "#FFE3A0" }, spotFreq: 4.2, zone: 0.7, glint: 1
     },
-    { // 2. «пористая скорлупа»: ветвистая фигура с кратерами-воронками, внутри светится оранжевый
+    { // 2. «пористая скорлупа»: органический гипс (чёрный) поверх цветного слоя (оранжевого), в отверстиях виден слой
       // (цвет скорлупы — под фон раздела: на чёрном она чёрная)
       kind: "pores", mesh: "ray", k: 0.38,
       prims: [
@@ -37,7 +37,7 @@
         { c: [[0.05, 0.3, 0], [1.45, 0.45, -0.15], 0.6, 0.5] },
         { c: [[0.2, -0.2, 0], [0.95, -0.55, 0.3], 0.5, 0.36] }
       ],
-      colors: { a: "#3B3836", b: "#FF6A1F", c: "#0C0C0E", d: "#FF8A3D" }, holes: 230, seed: 11
+      colors: { a: "#2E2C2B", b: "#FF5A14", c: "#0C0C0E", d: "#FF8A3D" }, holes: 230, seed: 11
     },
     { // 3. «пушистая»: розовый мех с жёлтыми зонами короткого ворса
       kind: "fur", mesh: "nets", k: 0.42, res: 84,
@@ -278,9 +278,11 @@
       aHole[i * 4] = 9; aHole[i * 4 + 1] = 0; aHole[i * 4 + 2] = 0; aHole[i * 4 + 3] = 0;
       if (!best || bq > 1.85) continue;
       // воронка: плавный спуск от края, крутая горловина, тёмная глубина
-      var depth = bq < 1.25 ? Math.pow(1 - Math.min(1, Math.max(0, (bq - 0.18) / 1.07)), 1.7) : 0;
-      var lip = bq > 1.1 && bq < 1.7 ? Math.sin((bq - 1.1) / 0.6 * Math.PI) * 0.05 : 0;   // чуть приподнятый венчик
-      v.addScaledVector(best.n, -(depth * 1.35 - lip) * best.r);
+      // корка толщиной ~0.4 радиуса: край чуть скруглён, стенка крутая, дно (цветной слой) ровное
+      var depth = 1 - Math.min(1, Math.max(0, (bq - 0.86) / 0.2));
+      depth = depth * depth * (3 - 2 * depth);
+      var sag = bq > 1.0 && bq < 1.5 ? (1 - (bq - 1.0) / 0.5) * 0.06 : 0;                // корка слегка проседает к краю
+      v.addScaledVector(best.n, -(depth * 0.42 + sag) * best.r);
       pos.setXYZ(i, v.x, v.y, v.z);
       aHole[i * 4] = bx; aHole[i * 4 + 1] = by; aHole[i * 4 + 2] = depth; aHole[i * 4 + 3] = best.r;
       rd.copy(best.t).multiplyScalar(bx).addScaledVector(best.b, by).normalize();
@@ -400,40 +402,47 @@
     // скорлупа с кратерами: отверстия разного размера, края проседают внутрь, вокруг — тёмные «волокна»,
     // внутри — светящийся цвет
     pores: [
-      // q — где мы относительно кратера (<1 внутри); dep — глубина; ang — угол вокруг центра
+      // органический «гипс» поверх цветного слоя: в отверстиях виден слой под коркой
       "float q = length(vHole.xy); float dep = vHole.z; float hr = vHole.w; float ang = atan(vHole.y, vHole.x);",
-      "float inH = 1.0 - smoothstep(1.25, 1.8, q);",
-      // тонкие радиальные волокна: чем крупнее кратер, тем их больше; к центру они сходятся и темнеют
-      "float nf = floor(clamp(hr * 420.0, 22.0, 90.0));",
-      "float w = ang * nf + (vn(vec3(ang * 3.0, q * 2.0, hr * 50.0)) - 0.5) * 4.0;",
-      "float fib = 0.5 + 0.5 * sin(w) * clamp(1.0 - fwidth(w) / 2.5, 0.0, 1.0);",   // без ряби на мелких кратерах
-      "float fibMask = smoothstep(0.15, 0.55, q) * (1.0 - smoothstep(1.05, 1.6, q)) * inH;",
-      // мелкие поры между кратерами — только шейдером
-      "float pf1, pf2; vec3 po1, po2; voro(vOpos * 26.0, 0.9, pf1, pf2, po1, po2);",
-      "float pid = h31(floor(vOpos * 26.0 + po1) + 3.3);",
-      "float pr = (0.12 + 0.2 * pid) * step(0.45, pid) * smoothstep(0.35, 0.65, vn(vOpos * 2.2 + 4.0)) * (1.0 - inH);",
-      "float pore = 1.0 - smoothstep(pr * 0.55, pr, pf1);",
-      "float poreRim = (1.0 - smoothstep(pr, pr * 1.9, pf1)) * (1.0 - pore) * step(0.001, pr);",
-      // зерно скорлупы: два слоя гранул разного размера
-      "vec4 g1 = bead(vOpos * 95.0), g2 = bead(vOpos * 170.0 + 7.0);",
-      "vec3 tang = normalize(cross(vDir, vOpos) + 1e-4);",
-      "vec3 gObj = (g1.xyz * 0.55 + g2.xyz * 0.35) * 0.0045 * 95.0 * (1.0 - fibMask * 0.6)",
-      "          + vDir * cos(w) * fibMask * 0.25 - normalize(po1 + 1e-4) * poreRim * 0.6;",
-      "float ao = mix(0.78, 1.04, g1.w * 0.6 + g2.w * 0.4);",
-      "ao *= mix(1.0, mix(0.55, 1.0, fib), fibMask);",                    // бороздки волокон
-      "ao *= mix(1.0, 0.18, smoothstep(0.25, 0.95, dep));",                  // глубина темнеет
-      "ao *= 1.0 - poreRim * 0.45;",
-      "vec3 shell = uColA * ao;",
-      // дно светится оранжевым; на стенки ложится тёплый отсвет; мелкие поры — тёмные с искрой внутри
-      "float throat = (1.0 - smoothstep(0.1, 0.42, q)) * inH;",
-      "float bounce = (1.0 - smoothstep(0.3, 0.95, q)) * inH;",
-      "float spark = 1.0 - smoothstep(0.0, pr * 0.35, pf1);",
-      "vec3 col = shell + uColB * bounce * ao * 0.35;",
-      "col = mix(col, uColB * mix(0.55, 1.0, 1.0 - q / 0.42), throat);",
-      "col = mix(col, uColA * 0.12, pore);",
-      "glow = uColB * (throat * 0.8 + bounce * ao * 0.12 + pore * spark * step(0.001, pr) * 0.6);",
+      "float inH = step(q, 8.0);",
+      // цветной слой — всё, что глубже края
+      "float layer = (1.0 - smoothstep(0.84, 0.9, q)) * inH;",
+      "float wall = smoothstep(0.84, 0.9, q) * (1.0 - smoothstep(0.98, 1.06, q)) * inH;",
+      // лучи вокруг отверстия по поверхности корки — как иглы у морского ежа
+      "float nf = floor(clamp(hr * 520.0, 26.0, 110.0));",
+      "float w = ang * nf + (vn(vec3(ang * 4.0, hr * 80.0, 1.0)) - 0.5) * 3.0;",
+      "float ray = pow(0.5 + 0.5 * sin(w) * clamp(1.0 - fwidth(w) / 2.5, 0.0, 1.0), 2.0);",
+      "float rayLen = 1.35 + 0.55 * vn(vec3(ang * 9.0, hr * 30.0, 4.0));",
+      "float rays = smoothstep(0.98, 1.06, q) * (1.0 - smoothstep(1.06, rayLen, q)) * inH;",
+      // мелкие проколы между отверстиями — тоже до цветного слоя
+      "float pf1, pf2; vec3 po1, po2; voro(vOpos * 30.0, 0.9, pf1, pf2, po1, po2);",
+      "float pid = h31(floor(vOpos * 30.0 + po1) + 3.3);",
+      "float pr = (0.07 + 0.11 * pid) * step(0.55, pid) * smoothstep(0.35, 0.65, vn(vOpos * 2.2 + 4.0)) * (1.0 - inH);",
+      "float pin = 1.0 - smoothstep(pr * 0.7, pr, pf1);",
+      "float pinRay = (1.0 - smoothstep(pr, pr * 2.6, pf1)) * (1.0 - pin) * step(0.001, pr);",
+      // корка: плотное зерно гипса
+      "vec4 g1 = bead(vOpos * 110.0), g2 = bead(vOpos * 210.0 + 7.0), g3 = bead(vOpos * 40.0 + 3.0);",
+      "vec3 gObj = (g1.xyz * 0.5 + g2.xyz * 0.35 + g3.xyz * 0.25) * 0.0042 * 110.0 * (1.0 - layer)",
+      "          + vDir * cos(w) * rays * 0.35;",
+      "float ao = mix(0.72, 1.06, g1.w * 0.5 + g2.w * 0.3 + g3.w * 0.2);",
+      "ao *= mix(1.0, mix(0.55, 1.0, 1.0 - ray), rays);",     // лучи — тонкие бороздки
+      "ao *= 1.0 - pinRay * 0.4;",
+      "vec3 crust = uColA * ao;",
+      "crust *= mix(1.0, 0.3, wall);",                          // стенка в тени
+      // кромка корки ловит свет; в бороздках лучей — оранжевая пыль, будто цвет проступает из-под гипса
+      "float lipL = smoothstep(0.96, 1.02, q) * (1.0 - smoothstep(1.02, 1.12, q)) * inH;",
+      "crust += vec3(0.09) * lipL;",
+      "float dust = rays * ray * (1.0 - smoothstep(1.0, rayLen, q));",
+      "crust = mix(crust, uColB * 0.55, dust * 0.55 + pinRay * 0.35);",
+      // цветной слой: насыщенный, матовый, со своей мелкой фактурой, у стенки затенён
+      "vec4 gl = bead(vOpos * 150.0 + 11.0);",
+      "float edgeShade = smoothstep(0.88, 0.5, q);",
+      "vec3 under = uColB * mix(0.22, 1.0, edgeShade) * mix(0.78, 1.06, gl.w);",
+      "vec3 col = mix(crust, under, layer);",
+      "col = mix(col, uColB * 0.8, pin);",
+      "glow = uColB * (layer * edgeShade * 0.22 + pin * 0.3 + dust * 0.08);",
       "float glint = 0.0;",
-      "float rough = mix(0.7, 0.9, fibMask);"
+      "float rough = mix(0.88, 0.7, layer);"
     ],
     // основа меха: густой подшёрсток (сами волоски — слоями, см. buildFur)
     furbase: [
