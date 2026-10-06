@@ -77,7 +77,7 @@ body{
 .doc > * + *, .doc .card > * + *{ margin-top:14px; }
 .doc h1 + *{ margin-top:22px; }
 .doc h3 + *, .doc h4 + *{ margin-top:12px; }
-.doc strong{ font-weight:600; }
+.doc strong, .doc b{ font-weight:600; }
 .doc b.key{ font-weight:600; }
 .doc a{ color:inherit; text-underline-offset:3px; }
 .doc s{ color:var(--ink-faint); }
@@ -95,7 +95,9 @@ body{
   transition:transform .5s var(--ease-out), box-shadow .5s var(--ease-out); }
 .doc .callout:hover{ transform:translateY(-2px); box-shadow:0 0 40px 9px rgba(255,58,30,.65), 0 14px 32px rgba(160,30,0,.18); }
 
-.doc .fact, .doc .warn, .doc .note{ padding-left:16px; border-left:2px solid var(--ink); }
+.doc .warn, .doc .note{ padding-left:16px; border-left:2px solid var(--ink); }
+.doc .fact{ position:relative; padding-left:18px; }
+.doc .fact::before{ content:""; position:absolute; left:0; top:2px; bottom:2px; width:2px; border-radius:2px; background:#FF5A14; box-shadow:0 0 8px 1px rgba(255,90,20,.75); }
 .doc .note, .doc .when-not{ color:var(--ink-soft); }
 .doc .aside{ color:rgba(255,255,255,.72); }
 .doc aside.draft, .doc p.draft{ display:block; padding:12px 16px; border-radius:12px; border:1px dashed var(--ink-faint); color:var(--ink-soft); font-size:14px; font-style:italic; }
@@ -103,17 +105,21 @@ body{
 .doc .draft-inline{ color:var(--ink-soft); font-style:italic; }
 .doc .cards, .doc .groups{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
 @media (min-width: 1440px){ .doc .cards{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 900px){ .doc .cards:has(> .card:nth-child(3):last-child){ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 560px){ .doc .cards, .doc .groups{ grid-template-columns:1fr; } }
 .doc .card, .doc .groups > div{ padding:20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 .doc .card h3{ margin:0; padding:0; border:0; font-size:24px; font-weight:700; letter-spacing:-.02em; }
 .doc .card h4{ margin:0; font-size:20px; }
 .doc .card p, .doc .card li{ font-size:15px; }
-.doc .groups b{ display:block; margin-bottom:6px; }
+.doc .groups > div{ font-size:15px; line-height:1.6; }
+.doc .groups b{ display:block; margin-bottom:12px; font-size:24px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
 .doc .compare{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .doc .compare > div{ padding:16px 18px; border-radius:16px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); font-size:16px; line-height:1.55; }
 .doc .compare .good{ box-shadow:inset 0 0 0 1.5px var(--ink); }
 
-.doc .template > div{ padding:6px 0; font-size:16px; }
+.doc .template > div{ padding:1px 0; font-size:16px; }
+.doc .template > .gap{ margin-top:16px; }
+.doc .template > .gap--l{ margin-top:24px; }
 .doc .table-wrap{ overflow-x:auto; padding:6px 20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 .doc .table-wrap td, .doc .table-wrap th{ font-size:clamp(14px, 1.05vw, 16px); }
 .doc .table-wrap tr + tr > *{ box-shadow:inset 0 1px 0 var(--rule); }
