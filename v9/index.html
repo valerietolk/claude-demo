@@ -115,12 +115,16 @@ body{
 .doc .groups b{ display:block; margin-bottom:14px; font-size:24px; font-weight:700; letter-spacing:-.02em; line-height:1.2; text-transform:lowercase; }
 .doc .compare{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .doc .compare > div{ padding:16px 18px; border-radius:16px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); font-size:16px; line-height:1.55; }
-.doc .compare .good{ box-shadow:inset 0 0 0 1.5px var(--ink); }
+.doc .compare .good{ box-shadow:0 0 28px 5px rgba(40,200,90,.5), 0 8px 24px rgba(0,90,30,.14); }
 
 .doc .template > div{ padding:4px 0; font-size:clamp(16px, 1.2vw, 18px); line-height:1.6; letter-spacing:-.006em; }
 .doc .template > .gap{ margin-top:20px; }
 .doc .template > .gap--l{ margin-top:28px; }
 .doc .template ul{ margin:10px 0 0; }
+/* «от себя»: заголовок блока отдельной строкой, под ним текст, между блоками воздух */
+.doc .personal > p + p{ margin-top:6px; }
+.doc .personal > p:has(> strong:only-child) + p{ margin-top:6px; }
+.doc .personal > p:has(> strong:only-child):not(:first-child){ margin-top:36px; }
 .doc .table-wrap{ overflow-x:auto; padding:6px 20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 .doc .table-wrap td, .doc .table-wrap th{ font-size:clamp(14px, 1.05vw, 16px); }
 .doc .table-wrap tr + tr > *{ box-shadow:inset 0 1px 0 var(--rule); }
@@ -303,7 +307,9 @@ body{
       tl.appendChild(tb); tocList.appendChild(tl);
     });
   }
-  function go(i){ window.scrollTo({ top: sections[i].offsetTop + 2, behavior: "smooth" }); }
+  // offsetTop считается от блока с главами, а не от страницы (над ним ещё экран с логотипом) — берём настоящую позицию
+  function top(el){ return el.getBoundingClientRect().top + pageYOffset; }
+  function go(i){ window.scrollTo({ top: top(sections[i]) + 2, behavior: "smooth" }); }
   function openToc(){ toc.classList.add("is-open"); burger.setAttribute("aria-expanded", "true"); }
   function closeToc(){ toc.classList.remove("is-open"); burger.setAttribute("aria-expanded", "false"); }
   burger.addEventListener("click", function(e){ e.stopPropagation(); toc.classList.contains("is-open") ? closeToc() : openToc(); });
@@ -325,7 +331,7 @@ body{
   function markNav(y){
     rail.classList.toggle("on", y > innerHeight * 0.6);
     var cur = 0;
-    for (var i = 0; i < sections.length; i++) if (sections[i].offsetTop <= y + innerHeight * 0.4) cur = i;
+    for (var i = 0; i < sections.length; i++) if (top(sections[i]) <= y + innerHeight * 0.4) cur = i;
     if (cur === active) return;
     active = cur;
     [].forEach.call(dots.children, function(li, k){ li.firstChild.classList.toggle("is-active", k === cur); });
@@ -350,9 +356,9 @@ body{
   function css(v){ return "rgba(" + Math.round(v[0]) + "," + Math.round(v[1]) + "," + Math.round(v[2]) + "," + v[3].toFixed(3) + ")"; }
   function hex(v){ return "#" + [0, 1, 2].map(function(i){ return ("0" + Math.round(v[i]).toString(16)).slice(-2); }).join(""); }
   var stage = document.querySelector(".stage"), theme = document.querySelector('meta[name="theme-color"]'), lastPal = "";
-  function applyPalette(k, blend){
-    var a = PALETTES[k], b = PALETTES[Math.min(k + 1, PALETTES.length - 1)];
-    var key = k + ":" + blend.toFixed(3);
+  function applyPalette(ka, kb, blend){
+    var a = PALETTES[ka], b = PALETTES[kb];
+    var key = ka + ">" + kb + ":" + blend.toFixed(3);
     if (key === lastPal) return;
     lastPal = key;
     for (var i = 0; i < 4; i++) stage.style.setProperty("--c" + (i + 1), css(mix(a.bg[i], b.bg[i], blend)));
@@ -366,15 +372,27 @@ body{
     FIG.bounce(hex(mix(a.bounce, b.bounce, blend)));
   }
 
-  // ---------- прокрутка: семь фигур, страница делится на равные отрезки ----------
-  // Внутри отрезка прокрутка медленно поворачивает фигуру в «комнате» со светом;
-  // в конце она уезжает, а следующая въезжает с другой стороны, пока меняется фон.
+  // ---------- прокрутка: семь фигур, каждая со своим фоном держит целые главы ----------
+  // Номера глав (с нуля, последняя — «thanks.»), с которых начинается каждый из 7 участков.
+  // Фон меняется только на границе глав: когда заголовок новой главы доезжает до середины экрана.
+  // Внутри участка прокрутка медленно поворачивает фигуру; у границы она уезжает, следующая въезжает.
   var CYCLES = PALETTES.length;
+  var GROUP_START = [0, 1, 3, 5, 7, 8, 10];
   var ready = false, progress = 0, gAt = 0, gSeek = 0, last = performance.now();
+  var palFrom = 0, palTo = 0, palT = 1, PAL_TIME = 0.45;   // быстрая смена фона по времени, а не по прокрутке
   function readScroll(){
     var max = document.documentElement.scrollHeight - innerHeight, y = pageYOffset;
     progress = max > 0 ? clamp(y / max, 0, 1) : 0;
-    gAt = Math.min(CYCLES, progress * CYCLES);
+    var all = content.querySelectorAll(".chapter");
+    if (all.length > GROUP_START[CYCLES - 1]){
+      var b = GROUP_START.map(function(ci, k){ return k ? Math.min(max, top(all[ci]) - innerHeight * 0.5) : 0; });
+      b.push(Math.max(max, b[CYCLES - 1] + 1));
+      var k = 0;
+      while (k < CYCLES - 1 && y >= b[k + 1]) k++;
+      gAt = k + clamp((y - b[k]) / Math.max(1, b[k + 1] - b[k]), 0, k < CYCLES - 1 ? 0.999 : 1);
+    } else gAt = Math.min(CYCLES, progress * CYCLES);
+    var want = Math.min(CYCLES - 1, Math.floor(gAt));
+    if (want !== palTo){ palFrom = palT < 0.5 ? palFrom : palTo; palTo = want; palT = 0; }
     if (sections.length) markNav(y);
   }
   function frame(now){
@@ -386,7 +404,8 @@ body{
       var e = ENTRY[k], n = k < CYCLES - 1 ? ENTRY[k + 1] : [0, 0, 0];
       var inK = 1 - ramp(c, 0, 0.1), outK = ramp(c, 0.92, 1);
       FIG.place(e[0] * inK + 9 * outK * (k < CYCLES - 1 ? 1 : 0), e[1] * inK, 0);
-      applyPalette(k, k < CYCLES - 1 ? ramp(c, 0.97, 1) : 0);
+      palT = Math.min(1, palT + dt / PAL_TIME);
+      applyPalette(palFrom, palTo, smooth(palT));
       // первый экран: фигура крупно за логотипом; дальше отходит вправо, освобождая место тексту
       var past = ramp(pageYOffset / innerHeight, 0.2, 1);
       var wide = innerWidth > 900;
@@ -408,7 +427,7 @@ body{
 
   Promise.all(FILES.map(function(f){
     return fetch(f).then(function(r){ return r.ok ? r.text() : ""; }).catch(function(){ return ""; });
-  })).then(function(md){ render(md); typeThanks(); buildNav(); readScroll(); gSeek = gAt; });
+  })).then(function(md){ render(md); typeThanks(); buildNav(); readScroll(); gSeek = gAt; palFrom = palTo; palT = 1; });
 
   readScroll();
   requestAnimationFrame(frame);
