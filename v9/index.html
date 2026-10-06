@@ -120,6 +120,7 @@ body{
 .doc .template > div{ padding:4px 0; font-size:clamp(16px, 1.2vw, 18px); line-height:1.6; letter-spacing:-.006em; }
 .doc .template > .gap{ margin-top:20px; }
 .doc .template > .gap--l{ margin-top:28px; }
+.doc .template ul{ margin:10px 0 0; }
 .doc .table-wrap{ overflow-x:auto; padding:6px 20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 .doc .table-wrap td, .doc .table-wrap th{ font-size:clamp(14px, 1.05vw, 16px); }
 .doc .table-wrap tr + tr > *{ box-shadow:inset 0 1px 0 var(--rule); }
@@ -132,6 +133,8 @@ body{
 .doc .thanks{ display:grid; place-content:center; justify-items:center; text-align:center; }
 .doc .thanks__title{ font-size:clamp(72px, 12vw, 180px); }
 .doc .thanks__note{ color:var(--ink-soft); font-size:13px; }
+.doc .thanks__note.typing::after{ content:""; display:inline-block; width:1px; height:1.1em; margin-left:2px; vertical-align:-.15em; background:currentColor; animation:caret 1s steps(1) infinite; }
+@keyframes caret{ 50%{ opacity:0; } }
 
 /* ---------- навигация справа: стеклянная капсула с точками и «жидкой» каплей текущей главы ---------- */
 :root{ --accent:#E8501C; }
@@ -260,6 +263,26 @@ body{
     });
   }
 
+  // ---------- «thanks.»: подпись печатается, когда экран доезжает до неё ----------
+  function typeThanks(){
+    var note = content.querySelector(".thanks__note");
+    if (!note || !("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var full = note.textContent, done = false;
+    note.style.minHeight = note.offsetHeight + "px";
+    note.textContent = "";
+    new IntersectionObserver(function(entries, obs){
+      if (done || !entries[0].isIntersecting) return;
+      done = true; obs.disconnect();
+      note.classList.add("typing");
+      var n = 0;
+      (function step(){
+        note.textContent = full.slice(0, ++n);
+        if (n < full.length) setTimeout(step, 35 + Math.random() * 35);
+        else setTimeout(function(){ note.classList.remove("typing"); }, 2400);
+      })();
+    }, { threshold:1 }).observe(note);
+  }
+
   // ---------- навигация: точки + содержание ----------
   var rail = document.getElementById("rail"), dots = document.getElementById("dots");
   var toc = document.getElementById("toc"), tocList = document.getElementById("tocList"), burger = document.getElementById("burger");
@@ -385,7 +408,7 @@ body{
 
   Promise.all(FILES.map(function(f){
     return fetch(f).then(function(r){ return r.ok ? r.text() : ""; }).catch(function(){ return ""; });
-  })).then(function(md){ render(md); buildNav(); readScroll(); gSeek = gAt; });
+  })).then(function(md){ render(md); typeThanks(); buildNav(); readScroll(); gSeek = gAt; });
 
   readScroll();
   requestAnimationFrame(frame);
