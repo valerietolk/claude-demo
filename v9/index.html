@@ -129,8 +129,9 @@ body{
 .doc .template{ padding:22px 24px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 /* «от себя»: заголовок блока отдельной строкой, под ним текст, между блоками воздух */
 .doc .personal > p + p{ margin-top:6px; }
-.doc .personal > p:has(> strong:only-child) + p{ margin-top:6px; }
-.doc .personal > p:has(> strong:only-child):not(:first-child){ margin-top:36px; }
+.doc .personal > p.ptitle + p{ margin-top:6px; }
+.doc .personal > p.ptitle:not(:first-child){ margin-top:36px; }
+.doc .callout + .personal{ margin-top:36px; }
 .doc .table-wrap{ overflow-x:auto; padding:6px 20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 .doc .table-wrap td, .doc .table-wrap th{ font-size:clamp(14px, 1.05vw, 16px); }
 .doc .table-wrap tr + tr > *{ box-shadow:inset 0 1px 0 var(--rule); }
@@ -259,6 +260,11 @@ body{
         if (h.children.length === 0 && h.textContent.indexOf("/") >= 0) h.innerHTML = h.textContent.split("/").map(esc).join("/<wbr>");
       });
       stripEmoji(doc);
+      // «от себя»: абзац, целиком состоящий из жирного текста, — заголовок блока
+      doc.querySelectorAll(".personal > p").forEach(function(p){
+        var b = p.querySelector("strong, b");
+        if (b && b.textContent.trim() === p.textContent.trim()) p.classList.add("ptitle");
+      });
       doc.querySelectorAll("table").forEach(function(t){ var w = document.createElement("div"); w.className = "table-wrap"; t.parentNode.replaceChild(w, t); w.appendChild(t); });
       doc.querySelectorAll("a[href^='http']").forEach(function(a){ a.target = "_blank"; a.rel = "noopener"; });
       var last = i === FILES.length - 1;
