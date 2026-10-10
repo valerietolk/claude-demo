@@ -132,6 +132,8 @@ body{
 .doc .personal > p.ptitle + p{ margin-top:6px; }
 .doc .personal > p.ptitle:not(:first-child){ margin-top:36px; }
 .doc .callout + .personal{ margin-top:36px; }
+.doc .personal + .personal{ margin-top:36px; }
+.doc .personal > * + *{ margin-top:12px; }
 .doc .table-wrap{ overflow-x:auto; padding:6px 20px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 .doc .table-wrap td, .doc .table-wrap th{ font-size:clamp(14px, 1.05vw, 16px); }
 .doc .table-wrap tr + tr > *{ box-shadow:inset 0 1px 0 var(--rule); }
