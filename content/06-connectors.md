@@ -2,13 +2,6 @@
 
 Коннектор даёт Claude доступ к сервису: Figma, Jira, Notion, аналитика, записи созвонов. Claude становится клеем между сервисами, которые друг с другом принципиально не разговаривают.
 
-<div class="groups">
-<div><b>Дизайн и рефы</b>Figma · Mobbin (платный) · Canva · Adobe · Miro · Webflow · Unsplash</div>
-<div><b>Ресёрч и интервью</b>Dovetail · Listen Labs · Zoom · Granola · Fireflies</div>
-<div><b>Голос пользователя и цифры</b>Intercom (поддержка) · Amplitude · Mixpanel</div>
-<div><b>Команда и задачи</b>Jira, Confluence и Loom (одним коннектором Atlassian) · Linear · Notion · Slack · Google Drive</div>
-</div>
-
 Через коннектор Claude умеет:
 
 - создавать новые файлы Figma Design, FigJam и Slides с нуля
@@ -18,6 +11,13 @@
 - собирать диаграммы в FigJam из Mermaid
 - Code Connect
 - искать по дизайн-системе и доставать определения переменных
+
+<div class="groups">
+<div><b>Дизайн и рефы</b>Figma · Mobbin (платный) · Canva · Adobe · Miro · Webflow · Unsplash</div>
+<div><b>Ресёрч и интервью</b>Dovetail · Listen Labs · Zoom · Granola · Fireflies</div>
+<div><b>Голос пользователя и цифры</b>Intercom (поддержка) · Amplitude · Mixpanel</div>
+<div><b>Команда и задачи</b>Jira, Confluence и Loom (одним коннектором Atlassian) · Linear · Notion · Slack · Google Drive</div>
+</div>
 
 ### Связки
 
