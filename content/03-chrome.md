@@ -1,4 +1,4 @@
-# Claude in Chrome
+# claude in chrome
 
 Что это: [расширение для Chrome](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn?hl=ru). Claude открывает вкладки, кликает, листает, заполняет формы и читает страницы – прямо в браузере.
 
