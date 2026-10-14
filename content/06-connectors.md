@@ -15,7 +15,7 @@
 <div class="groups">
 <div><b>Дизайн и рефы</b>Figma · Mobbin (платный) · Canva · Adobe · Miro · Webflow · Unsplash</div>
 <div><b>Ресёрч и интервью</b>Dovetail · Listen Labs · Zoom · Granola · Fireflies</div>
-<div><b>Голос пользователя и цифры</b>Intercom (поддержка) · Amplitude · Mixpanel</div>
+<div><b>Голос пользователя и цифры</b>Amplitude · Mixpanel</div>
 <div><b>Команда и задачи</b>Jira, Confluence и Loom (одним коннектором Atlassian) · Linear · Notion · Slack · Google Drive</div>
 </div>
 

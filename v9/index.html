@@ -120,7 +120,17 @@ body{
 .doc .groups b{ display:block; margin-bottom:14px; font-size:22px; font-weight:700; letter-spacing:-.02em; line-height:1.2; text-transform:lowercase; }
 .doc .compare{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
 .doc .compare > div{ padding:16px 18px; border-radius:16px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); font-size:16px; line-height:1.55; }
-.doc .compare .good{ box-shadow:0 0 26px 3px rgba(40,200,90,.32), 0 8px 24px rgba(0,90,30,.10); }
+.doc .compare .label{ display:block; margin-bottom:8px; font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
+/* «correct»: вместо свечения – бегущий по рамке луч, включается, когда карточки на экране */
+@property --beam{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
+.doc .compare .good{ position:relative; }
+.doc .compare .good::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1.5px; pointer-events:none;
+  background:conic-gradient(from var(--beam), transparent 0 64%, #FF5A14 74%, #FF4FA3 81%, #8B7CFF 88%, #6BE38A 94%, transparent 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude;
+  opacity:0; transition:opacity .8s var(--ease-out); }
+.doc .compare.in-view .good::before{ opacity:1; animation:beam 6s linear infinite; }
+@keyframes beam{ to{ --beam:360deg; } }
+@media (prefers-reduced-motion: reduce){ .doc .compare.in-view .good::before{ animation:none; } }
 
 .doc .template > div{ padding:4px 0; font-size:clamp(16px, 1.2vw, 18px); line-height:1.6; letter-spacing:-.006em; }
 .doc .template > .gap{ margin-top:20px; }
@@ -129,6 +139,11 @@ body{
 .doc .template{ padding:22px 24px; border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
 /* «от себя»: заголовок блока отдельной строкой, под ним текст, между блоками воздух */
 .doc .personal > p + p{ margin-top:6px; }
+/* «Где подводит»: заголовки размером обычного текста, стрелка-вывод вплотную к тексту */
+.doc .fails > * + *{ margin-top:4px; }
+.doc .fails > p.ptitle:not(:first-child){ margin-top:28px; }
+.doc .fails > p.ptitle strong{ font-weight:700; }
+.doc .fails > p.arrow{ margin-top:6px; }
 .doc .personal > p.ptitle{ font-size:20px; font-weight:700; line-height:1.3; letter-spacing:-.014em; }
 .doc .personal > p.ptitle strong{ font-weight:700; }
 .doc .personal > p.ptitle + *{ margin-top:10px; }
@@ -265,9 +280,10 @@ body{
       });
       stripEmoji(doc);
       // «от себя»: абзац, целиком состоящий из жирного текста, — заголовок блока
-      doc.querySelectorAll(".personal > p").forEach(function(p){
+      doc.querySelectorAll(".personal > p, .fails > p").forEach(function(p){
         var b = p.querySelector("strong, b");
-        if (b && b.textContent.trim() === p.textContent.trim()) p.classList.add("ptitle");
+        if (!b || b.textContent.trim() !== p.textContent.trim()) return;
+        p.classList.add(p.textContent.trim().charAt(0) === "→" ? "arrow" : "ptitle");
       });
       doc.querySelectorAll("table").forEach(function(t){ var w = document.createElement("div"); w.className = "table-wrap"; t.parentNode.replaceChild(w, t); w.appendChild(t); });
       doc.querySelectorAll("a[href^='http']").forEach(function(a){ a.target = "_blank"; a.rel = "noopener"; });
@@ -282,6 +298,14 @@ body{
       sec.appendChild(doc);
       content.appendChild(sec);
     });
+  }
+
+  // ---------- карточки wrong/correct: луч по рамке бежит, пока они на экране ----------
+  function watchCompare(){
+    var list = content.querySelectorAll(".compare");
+    if (!("IntersectionObserver" in window)){ [].forEach.call(list, function(c){ c.classList.add("in-view"); }); return; }
+    var io = new IntersectionObserver(function(es){ es.forEach(function(e){ e.target.classList.toggle("in-view", e.isIntersecting); }); }, { threshold:0.3 });
+    [].forEach.call(list, function(c){ io.observe(c); });
   }
 
   // ---------- «thanks.»: подпись печатается, когда экран доезжает до неё ----------
@@ -299,7 +323,7 @@ body{
       (function step(){
         note.textContent = full.slice(0, ++n);
         if (n < full.length) setTimeout(step, 35 + Math.random() * 35);
-        else setTimeout(function(){ note.classList.remove("typing"); }, 2400);
+        // в конце курсор остаётся и мигает
       })();
     }, { threshold:1 }).observe(note);
   }
@@ -445,7 +469,7 @@ body{
 
   Promise.all(FILES.map(function(f){
     return fetch(f).then(function(r){ return r.ok ? r.text() : ""; }).catch(function(){ return ""; });
-  })).then(function(md){ render(md); typeThanks(); buildNav(); readScroll(); gSeek = gAt; palFrom = palTo; palT = 1; });
+  })).then(function(md){ render(md); typeThanks(); watchCompare(); buildNav(); readScroll(); gSeek = gAt; palFrom = palTo; palT = 1; });
 
   readScroll();
   requestAnimationFrame(frame);
