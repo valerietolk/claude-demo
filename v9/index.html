@@ -97,7 +97,7 @@ body{
   background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
   position:relative; box-shadow:0 0 24px 3px rgba(255,58,30,.36), 0 8px 24px rgba(160,30,0,.12);
   transition:transform .5s var(--ease-out), box-shadow .5s var(--ease-out); }
-.doc .callout::before{ content:""; position:absolute; left:24px; top:24px; width:26px; height:26px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10.27 3.5a2 2 0 0 1 3.46 0l8.2 14.2A2 2 0 0 1 20.2 20.7H3.8a2 2 0 0 1-1.73-3l8.2-14.2Z' fill='%23FF5A14'/%3E%3Crect x='11' y='8.2' width='2' height='6.6' rx='1' fill='%23fff'/%3E%3Ccircle cx='12' cy='17.4' r='1.2' fill='%23fff'/%3E%3C/svg%3E") center/contain no-repeat; }
+.doc .callout::before{ content:""; position:absolute; left:24px; top:50%; transform:translateY(-50%); width:26px; height:26px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10.27 3.5a2 2 0 0 1 3.46 0l8.2 14.2A2 2 0 0 1 20.2 20.7H3.8a2 2 0 0 1-1.73-3l8.2-14.2Z' fill='%23FF5A14'/%3E%3Crect x='11' y='8.2' width='2' height='6.6' rx='1' fill='%23fff'/%3E%3Ccircle cx='12' cy='17.4' r='1.2' fill='%23fff'/%3E%3C/svg%3E") center/contain no-repeat; }
 /* таблица без заголовков: если все ячейки шапки пустые – шапку прячем */
 .doc thead:not(:has(th:not(:empty))){ display:none; }
 /* большие экраны: колонка текста шире */
@@ -128,23 +128,16 @@ body{
 .doc .compare .label{ display:block; margin-bottom:8px; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
 .doc .compare .bad .label{ color:#FF6B5A; }
 .doc .compare .good .label{ color:#5FD37A; }
-/* «correct»: вместо свечения – бегущий по рамке луч, включается, когда карточки на экране */
-@property --beam{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
+/* «correct»: внутри мягкие цветные пятна медленно плывут, когда карточки на экране */
 .doc .compare .good{ position:relative; }
 .doc .compare .good{ overflow:hidden; isolation:isolate; }
-.doc .compare .good::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1.5px; pointer-events:none; z-index:1;
-  background:conic-gradient(from var(--beam), transparent 0 48%, rgba(255,90,20,.0) 52%, #FF5A14 66%, #FF4FA3 76%, #8B7CFF 86%, #6BE38A 94%, transparent 100%);
-  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude;
-  opacity:0; transition:opacity .8s var(--ease-out); }
-.doc .compare.in-view .good::before{ opacity:1; animation:beam 16s linear infinite; }
 /* внутри карточки – мягкие цветные пятна, медленно плывут вслед за лучом */
 .doc .compare .good::after{ content:""; position:absolute; inset:-30%; z-index:-1; pointer-events:none; opacity:0; transition:opacity 1.2s var(--ease-out);
   background:radial-gradient(40% 40% at 20% 15%, rgba(255,90,20,.20), transparent 70%), radial-gradient(35% 35% at 85% 30%, rgba(255,79,163,.16), transparent 70%),
              radial-gradient(40% 40% at 70% 90%, rgba(139,124,255,.16), transparent 70%), radial-gradient(35% 35% at 15% 85%, rgba(107,227,138,.14), transparent 70%); }
 .doc .compare.in-view .good::after{ opacity:1; animation:glowdrift 16s linear infinite; }
 @keyframes glowdrift{ to{ transform:rotate(360deg); } }
-@keyframes beam{ to{ --beam:360deg; } }
-@media (prefers-reduced-motion: reduce){ .doc .compare.in-view .good::before, .doc .compare.in-view .good::after{ animation:none; } }
+@media (prefers-reduced-motion: reduce){ .doc .compare.in-view .good::after{ animation:none; } }
 
 .doc .template > div{ padding:4px 0; font-size:clamp(16px, 1.2vw, 18px); line-height:1.6; letter-spacing:-.006em; }
 .doc .template > .gap{ margin-top:20px; }
