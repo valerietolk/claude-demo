@@ -18,5 +18,5 @@ rep('<script src="../vendor/marked.min.js"></script>','<script>'+esc(mk)+'</scri
 rep('<script src="../vendor/three.min.js"></script>','<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>')
 rep('<script src="figures.js"></script>','<script>'+esc(dn)+'</script>')
 h=re.sub(r'<link rel="icon"[^>]*>\n','',h)
-h=h.replace('<title>Claude · ликбез</title>','<title>Claude · семь фигур</title>')
+h=h.replace('<title>Claude · ликбез</title>','<title>claude</title>')
 open(out,'w').write(h); print(out)
