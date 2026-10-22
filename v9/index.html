@@ -95,7 +95,7 @@ body{
 .doc blockquote{ padding:14px 18px; border-radius:16px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
 .doc blockquote p{ font-size:clamp(15px, 1.1vw, 17px); }
 .doc .tag{ display:inline-block; margin-left:6px; padding:0 9px; border-radius:999px; box-shadow:inset 0 0 0 1px var(--rule); font-size:12px; font-weight:500; line-height:1.8; color:var(--ink-soft); white-space:nowrap; vertical-align:2px; }
-.doc .callout{ margin-top:28px; padding:24px 28px 24px 66px; border-radius:18px; font-weight:500;
+.doc .callout{ margin-top:28px; padding:16px 28px 16px 66px; border-radius:18px; font-weight:500;
   background:var(--glass); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
   position:relative; box-shadow:0 0 24px 3px rgba(255,58,30,.36), 0 8px 24px rgba(160,30,0,.12);
   transition:transform .5s var(--ease-out), box-shadow .5s var(--ease-out); }
@@ -155,7 +155,8 @@ body{
 .doc .fails > p.arrow{ margin-top:6px; }
 .doc .personal > p.ptitle{ font-size:20px; font-weight:700; line-height:1.3; letter-spacing:-.014em; }
 .doc .personal > p.ptitle strong{ font-weight:700; }
-.doc .personal > p.callout{ padding-top:16px; padding-bottom:16px; margin-bottom:24px; }
+.doc .personal > p.ptitle + p.callout{ margin-top:20px; }
+.doc .personal > p.callout{ margin-bottom:24px; }
 .doc .personal > p.ptitle + *{ margin-top:10px; }
 .doc .personal > p.ptitle:not(:first-child){ margin-top:36px; }
 .doc .callout + .personal{ margin-top:36px; }
